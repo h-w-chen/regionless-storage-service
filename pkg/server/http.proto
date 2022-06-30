@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package proto; 
+
+import "google/api/annotations.proto";
+option go_package = "./";
+
+service KV {
+  rpc Put (KVPutRequest) returns (KVPutReply) {
+    option (google.api.http) = {
+      post: "/v1/kv"
+      body: "*"
+    };
+  }
+}
+
+message KVPutRequest {
+  string name = 1;
+  string value = 2;
+}
+
+message KVPutReply {
+  string message = 1;
+}
