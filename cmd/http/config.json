@@ -1,0 +1,16 @@
+{
+    "ConsistentHash": "rendezvous",
+    "StoreType": "redis",
+    "Stores": [
+        {
+            "Name": "store1",
+            "Host": "172.31.12.96",
+            "Port": 6379
+        },
+        {
+            "Name": "store2",
+            "Host": "172.31.12.96",
+            "Port": 6380
+        }
+    ]
+}
