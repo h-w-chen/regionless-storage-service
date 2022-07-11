@@ -8,43 +8,21 @@ on:
   pull_request:
 
 jobs:
-  lint:
-    runs-on: ubuntu-18.04
-    timeout-minutes: 30
-    name: Verify vendor, licenses, do lint
-    env:
-      GOPATH: /home/runner/work/${{ github.repository }}
-    steps:
-      - name: Install Go
-        uses: actions/setup-go@v2
-        with:
-          go-version: 1.16.x
-
-      - name: Checkout code
-        uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
-          path: ./src/github.com/${{ github.repository }}
-
-      - uses: actions/cache@v2
-        with:
-          path: ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-
-      - name: Install dependences
-        run: |
-          sudo apt-get install -y jq
   build:
     runs-on: ubuntu-18.04
-    timeout-minutes: 30
-    name: Multiple build
     steps:
-      - name: Install Go
-        uses: actions/setup-go@v2
-        with:
-          go-version: 1.16.x
-
-      - uses: actions/cache@v2
-        with:
-          path: ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+    - uses: actions/checkout@v2
+    
+    - name: Setup Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: '1.16.0'
+    
+    - name: Install dependencies
+      run: |
+        go version
+        go get github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway
+        go get github.com/gomodule/redigo/redis
+        go get github.com/google/btree
+    - name: Run build
+      run: make build
