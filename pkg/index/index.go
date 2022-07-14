@@ -1,7 +1,6 @@
 package index
 
 import (
-	"fmt"
 	"sort"
 	"sync"
 
@@ -10,6 +9,7 @@ import (
 
 type Index interface {
 	Get(key []byte, atRev int64) (rev, created Revision, ver int64, err error)
+	RangeSince(key, end []byte, rev int64) []Revision
 	Put(key []byte, rev Revision)
 	Tombstone(key []byte, rev Revision) error
 	Equal(b Index) bool
@@ -61,8 +61,8 @@ func (ti *treeIndex) Get(key []byte, atRev int64) (modified, created Revision, v
 
 	ti.RLock()
 	defer ti.RUnlock()
+
 	item := ti.tree.Get(keyi)
-	fmt.Printf("****The key %v and get %v", key, item)
 	if item == nil {
 		return Revision{}, Revision{}, 0, ErrRevisionNotFound
 	}
