@@ -1,6 +1,6 @@
 {
     "ConsistentHash": "rendezvous",
-    "BucketSize": 2,
+    "BucketSize": 10,
     "StoreType": "redis",
     "Stores": [
         {

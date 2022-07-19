@@ -1,17 +1,19 @@
 package main
 
 import (
+	"encoding/binary"
 	"encoding/json"
 	"flag"
 	"fmt"
-	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/codes"
-	"go.opentelemetry.io/otel/trace"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"strconv"
 	"sync"
+
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/cespare/xxhash"
 	"k8s.io/klog"
@@ -182,7 +184,7 @@ func (handler *KeyValueHandler) getKV(w http.ResponseWriter, r *http.Request) (s
 	return "", fmt.Errorf("the key is missing at the query %v", r.URL.Query())
 }
 func (handler *KeyValueHandler) getValueByRev(rev index.Revision) (string, error) {
-	node := handler.ch.LocateKey([]byte(rev.String()))
+	node := handler.ch.LocateKey(handler.getPrimaryRevBytesWithBucket(rev))
 	conn, err := database.Factory(handler.conf.StoreType, node.String())
 	if err != nil {
 		return "", err
@@ -213,7 +215,7 @@ func (handler *KeyValueHandler) createKV(w http.ResponseWriter, r *http.Request)
 	defer rootSpan.End()
 
 	rev := revision.GetGlobalIncreasingRevision()
-	node := handler.ch.LocateKey([]byte(strconv.FormatUint(rev, 10)))
+	node := handler.ch.LocateKey(handler.getPrimaryRevBytesWithBucket(index.NewRevision(int64(rev), 0)))
 	conn, err := database.Factory(handler.conf.StoreType, node.String())
 	if err != nil {
 		rootSpan.RecordError(err)
@@ -270,7 +272,7 @@ func (handler *KeyValueHandler) deleteKV(w http.ResponseWriter, r *http.Request)
 			rootSpan.SetStatus(codes.Error, err.Error())
 			return "", err
 		}
-		node := handler.ch.LocateKey([]byte(rev.String()))
+		node := handler.ch.LocateKey(handler.getPrimaryRevBytesWithBucket(rev))
 		conn, err := database.Factory(handler.conf.StoreType, node.String())
 		if err != nil {
 			rootSpan.RecordError(err)
@@ -297,4 +299,11 @@ func (handler *KeyValueHandler) deleteKV(w http.ResponseWriter, r *http.Request)
 		return fmt.Sprintf("The key %s has been removed at %s\n", key, node.String()), err
 	}
 	return "", fmt.Errorf("the key is missing at the query %v", r.URL.Query())
+}
+
+func (handler *KeyValueHandler) getPrimaryRevBytesWithBucket(rev index.Revision) []byte {
+	primaryRev := rev.GetMain() / handler.conf.BucketSize
+	primaryRevBytes := make([]byte, 8)
+	binary.LittleEndian.PutUint64(primaryRevBytes, uint64(primaryRev))
+	return primaryRevBytes
 }
