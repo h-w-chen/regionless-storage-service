@@ -21,7 +21,7 @@ type KVConfiguration struct {
 	ConsistentHash string
 	StoreType      string
 	Stores         []KVStore
-	BucketSize     int
+	BucketSize     int64
 }
 type KVStore struct {
 	Name string

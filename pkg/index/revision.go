@@ -42,6 +42,12 @@ func NewRevision(main, sub int64) Revision {
 func (a Revision) String() string {
 	return fmt.Sprintf("%d", a.main)
 }
+func (a Revision) GetMain() int64 {
+	return a.main
+}
+func (a Revision) GetSub() int64 {
+	return a.sub
+}
 func (a Revision) GreaterThan(b Revision) bool {
 	if a.main > b.main {
 		return true
