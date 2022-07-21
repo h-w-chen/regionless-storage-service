@@ -24,9 +24,10 @@ type KVConfiguration struct {
 	BucketSize     int64
 }
 type KVStore struct {
-	Name string
-	Host string
-	Port int
+	Name     string
+	Host     string
+	Port     int
+	Replicas []KVStore
 }
 
 func NewKVConfiguration(fileName string) (KVConfiguration, error) {

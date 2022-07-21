@@ -11,25 +11,37 @@ import (
 
 var pools map[string]*redis.Pool
 
-func InitPool(stores []config.KVStore) {
+func InitPools(stores []config.KVStore) {
 	pools = make(map[string]*redis.Pool)
 	for _, conf := range stores {
-		url := fmt.Sprintf("%s:%d", conf.Host, conf.Port)
-		pool := &redis.Pool{
-			MaxIdle:   80,
-			MaxActive: 12000,
-			Dial: func() (redis.Conn, error) {
-				conn, err := redis.Dial("tcp", url)
-				if err != nil {
-					log.Printf("ERROR: fail init redis: %s", err.Error())
-					os.Exit(1)
-				}
-				return conn, err
-			},
-		}
-		fmt.Printf("The url is %s and the pool is %v\n", url, pool)
+		url, pool := initPool(conf.Host, conf.Port)
 		pools[url] = pool
+		for _, replica := range conf.Replicas {
+			url, pool = initPool(replica.Host, replica.Port)
+			pools[url] = pool
+		}
 	}
+}
+
+func initPool(host string, port int) (string, *redis.Pool) {
+	url := fmt.Sprintf("%s:%d", host, port)
+	if pools[url] != nil {
+		return url, pools[url]
+	}
+	pool := &redis.Pool{
+		MaxIdle:   80,
+		MaxActive: 12000,
+		Dial: func() (redis.Conn, error) {
+			conn, err := redis.Dial("tcp", url)
+			if err != nil {
+				log.Printf("ERROR: fail init redis: %s", err.Error())
+				os.Exit(1)
+			}
+			return conn, err
+		},
+	}
+	fmt.Printf("The url is %s and the pool is %v\n", url, pool)
+	return url, pool
 }
 
 type RedisDatabase struct {

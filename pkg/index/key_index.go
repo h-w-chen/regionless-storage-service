@@ -130,7 +130,7 @@ func (ki *keyIndex) since(rev int64) []Revision {
 	if ki.isEmpty() {
 		panic(fmt.Errorf("store.keyindex: unexpected get on empty keyIndex %s", string(ki.key)))
 	}
-	since := Revision{rev, 0}
+	since := Revision{rev, 0, nil}
 	var gi int
 	// find the generations to start checking
 	for gi = len(ki.generations) - 1; gi > 0; gi-- {

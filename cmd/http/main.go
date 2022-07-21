@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 	"sync"
 
 	"go.opentelemetry.io/otel"
@@ -19,9 +20,11 @@ import (
 	"k8s.io/klog"
 
 	"github.com/regionless-storage-service/pkg/config"
+	ca "github.com/regionless-storage-service/pkg/consistent"
 	"github.com/regionless-storage-service/pkg/database"
 	"github.com/regionless-storage-service/pkg/index"
 	"github.com/regionless-storage-service/pkg/partition/consistent"
+	"github.com/regionless-storage-service/pkg/piping"
 	"github.com/regionless-storage-service/pkg/revision"
 )
 
@@ -45,7 +48,7 @@ func main() {
 	if err != nil {
 		panic(fmt.Errorf("error setting gateway agent configuration: %v", err))
 	}
-	database.InitPool(conf.Stores)
+	database.InitPools(conf.Stores)
 
 	url := flag.String("url", ":8090", "proxy url")
 	flag.Parse()
@@ -63,6 +66,7 @@ type KeyValueHandler struct {
 	ch        consistent.ConsistentHashing
 	conf      config.KVConfiguration
 	indexTree index.Index
+	piping    piping.Piping
 }
 type testNode string
 
@@ -84,9 +88,15 @@ func NewKeyValueHandler(conf config.KVConfiguration) *KeyValueHandler {
 	ring := consistent.NewRendezvous(nil, testHash{})
 	for _, store := range conf.Stores {
 		node := fmt.Sprintf("%s:%d", store.Host, store.Port)
+		rs := make([]string, len(store.Replicas))
+		for idx, replica := range store.Replicas {
+			rs[idx] = fmt.Sprintf("%s:%d", replica.Host, replica.Port)
+		}
+		node = node + "," + strings.Join(rs, ",")
 		ring.AddNode(testNode(node))
 	}
-	return &KeyValueHandler{ch: ring, conf: conf, indexTree: index.NewTreeIndex()}
+	piping := piping.NewChainPiping(conf.StoreType, ca.LINEARIZABLE)
+	return &KeyValueHandler{ch: ring, conf: conf, indexTree: index.NewTreeIndex(), piping: piping}
 }
 
 func (handler *KeyValueHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -184,12 +194,7 @@ func (handler *KeyValueHandler) getKV(w http.ResponseWriter, r *http.Request) (s
 	return "", fmt.Errorf("the key is missing at the query %v", r.URL.Query())
 }
 func (handler *KeyValueHandler) getValueByRev(rev index.Revision) (string, error) {
-	node := handler.ch.LocateKey(handler.getPrimaryRevBytesWithBucket(rev))
-	conn, err := database.Factory(handler.conf.StoreType, node.String())
-	if err != nil {
-		return "", err
-	}
-	ret, err := conn.Get(rev.String())
+	ret, err := handler.piping.Read(rev)
 	if err != nil {
 		return "", err
 	}
@@ -215,13 +220,9 @@ func (handler *KeyValueHandler) createKV(w http.ResponseWriter, r *http.Request)
 	defer rootSpan.End()
 
 	rev := revision.GetGlobalIncreasingRevision()
-	node := handler.ch.LocateKey(handler.getPrimaryRevBytesWithBucket(index.NewRevision(int64(rev), 0)))
-	conn, err := database.Factory(handler.conf.StoreType, node.String())
-	if err != nil {
-		rootSpan.RecordError(err)
-		rootSpan.SetStatus(codes.Error, err.Error())
-		return "", err
-	}
+	newRev := index.NewRevision(int64(rev), 0, nil)
+	node := handler.ch.LocateKey(handler.getPrimaryRevBytesWithBucket(newRev))
+	newRev.SetNodes(strings.Split(node.String(), ","))
 
 	byteValue, err := ioutil.ReadAll(r.Body)
 
@@ -243,7 +244,7 @@ func (handler *KeyValueHandler) createKV(w http.ResponseWriter, r *http.Request)
 	{
 		_, span := otel.Tracer(config.TraceName).Start(ctx, "set kv", trace.WithSpanKind(trace.SpanKindClient))
 		defer span.End()
-		_, err = conn.Put(strconv.FormatUint(rev, 10), x["value"])
+		err := handler.piping.Write(newRev, x["value"])
 		if err != nil {
 			span.RecordError(err)
 			span.SetStatus(codes.Error, err.Error())
@@ -253,7 +254,7 @@ func (handler *KeyValueHandler) createKV(w http.ResponseWriter, r *http.Request)
 	{
 		_, span := otel.Tracer(config.TraceName).Start(ctx, "put index")
 		defer span.End()
-		handler.indexTree.Put([]byte(x["key"]), index.NewRevision(int64(rev), 0))
+		handler.indexTree.Put([]byte(x["key"]), newRev)
 	}
 
 	return fmt.Sprintf("The key value pair (%s,%s) has been saved as revision %s at %s\n", x["key"], x["value"], strconv.FormatUint(rev, 10), node.String()), err
