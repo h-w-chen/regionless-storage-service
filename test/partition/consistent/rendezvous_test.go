@@ -4,33 +4,21 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/cespare/xxhash"
+	"github.com/regionless-storage-service/pkg/partition/consistent"
 )
 
-type testNode string
+func TestRendezvousAddNode(t *testing.T) {
 
-func (tn testNode) String() string {
-	return string(tn)
-}
-
-type testHash struct{}
-
-func (th testHash) Hash(key []byte) uint64 {
-	return xxhash.Sum64(key)
-}
-
-func TestAddNode(t *testing.T) {
-
-	ring := NewRingHashing(testHash{})
+	rdz := consistent.NewRendezvous(nil, testHash{})
 	nodes := make(map[string]struct{})
 	for i := 0; i < 8; i++ {
 		node := testNode(fmt.Sprintf("127.0.0.1:808%d", i))
 		nodes[node.String()] = struct{}{}
-		ring.AddNode(node)
+		rdz.AddNode(node)
 	}
 	for node := range nodes {
 		found := false
-		for _, n := range ring.GetNodes() {
+		for _, n := range rdz.GetNodes() {
 			if node == n.String() {
 				found = true
 			}
@@ -41,10 +29,10 @@ func TestAddNode(t *testing.T) {
 	}
 }
 
-func TestLocateKey(t *testing.T) {
-	ring := NewRingHashing(testHash{})
+func TestRendezvousLocateKey(t *testing.T) {
+	rdz := consistent.NewRendezvous(nil, testHash{})
 	key := []byte("TestKey")
-	res := ring.LocateKey(key)
+	res := rdz.LocateKey(key)
 	if res != nil {
 		t.Fatalf("This should be nil: %v", res)
 	}
@@ -52,9 +40,9 @@ func TestLocateKey(t *testing.T) {
 	for i := 0; i < 8; i++ {
 		node := testNode(fmt.Sprintf("127.0.0.1:808%d", i))
 		nodes[node.String()] = struct{}{}
-		ring.AddNode(node)
+		rdz.AddNode(node)
 	}
-	res = ring.LocateKey(key)
+	res = rdz.LocateKey(key)
 	if res == nil {
 		t.Fatalf("This shouldn't be nil: %v", res)
 	}

@@ -22,6 +22,7 @@ type KVConfiguration struct {
 	StoreType      string
 	Stores         []KVStore
 	BucketSize     int64
+	ReplicaNum     int
 }
 type KVStore struct {
 	Name string

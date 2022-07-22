@@ -2,11 +2,12 @@ package index
 
 import (
 	"context"
+	"sort"
+	"sync"
+
 	"github.com/regionless-storage-service/pkg/config"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/codes"
-	"sort"
-	"sync"
 
 	"github.com/google/btree"
 )
@@ -37,12 +38,12 @@ func (ti *treeIndex) Put(key []byte, rev Revision) {
 	defer ti.Unlock()
 	item := ti.tree.Get(keyi)
 	if item == nil {
-		keyi.put(rev.main, rev.sub)
+		keyi.put(rev.main, rev.sub, rev.nodes)
 		ti.tree.ReplaceOrInsert(keyi)
 		return
 	}
 	okeyi := item.(*keyIndex)
-	okeyi.put(rev.main, rev.sub)
+	okeyi.put(rev.main, rev.sub, rev.nodes)
 }
 
 func (ti *treeIndex) Restore(key []byte, created, modified Revision, ver int64) {
@@ -57,7 +58,7 @@ func (ti *treeIndex) Restore(key []byte, created, modified Revision, ver int64) 
 		return
 	}
 	okeyi := item.(*keyIndex)
-	okeyi.put(modified.main, modified.sub)
+	okeyi.put(modified.main, modified.sub, modified.nodes)
 }
 
 func (ti *treeIndex) Get(ctx context.Context, key []byte, atRev int64) (modified, created Revision, ver int64, err error) {

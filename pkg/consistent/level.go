@@ -1,0 +1,8 @@
+package consistent
+
+type CONSISTENCY string
+
+const (
+	SEQUENTIAL   CONSISTENCY = "SEQUENTIAL"
+	LINEARIZABLE CONSISTENCY = "LINEARIZABLE"
+)

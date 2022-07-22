@@ -60,8 +60,8 @@ type keyIndex struct {
 }
 
 // put puts a Revision to the keyIndex.
-func (ki *keyIndex) put(main int64, sub int64) {
-	rev := Revision{main: main, sub: sub}
+func (ki *keyIndex) put(main int64, sub int64, nodes []string) {
+	rev := Revision{main: main, sub: sub, nodes: nodes}
 
 	if !rev.GreaterThan(ki.modified) {
 		panic(fmt.Errorf("store.keyindex: put with unexpected smaller Revision [%v / %v]", rev, ki.modified))
@@ -98,7 +98,7 @@ func (ki *keyIndex) tombstone(main int64, sub int64) error {
 	if ki.generations[len(ki.generations)-1].isEmpty() {
 		return ErrRevisionNotFound
 	}
-	ki.put(main, sub)
+	ki.put(main, sub, nil)
 	ki.generations = append(ki.generations, generation{})
 	// keysGauge.Dec()
 	return nil
@@ -130,7 +130,7 @@ func (ki *keyIndex) since(rev int64) []Revision {
 	if ki.isEmpty() {
 		panic(fmt.Errorf("store.keyindex: unexpected get on empty keyIndex %s", string(ki.key)))
 	}
-	since := Revision{rev, 0}
+	since := Revision{rev, 0, nil}
 	var gi int
 	// find the generations to start checking
 	for gi = len(ki.generations) - 1; gi > 0; gi-- {

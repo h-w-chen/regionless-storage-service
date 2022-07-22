@@ -34,10 +34,12 @@ type Revision struct {
 	// atomically. Each change has different increasing sub Revision in that
 	// set.
 	sub int64
+
+	nodes []string
 }
 
-func NewRevision(main, sub int64) Revision {
-	return Revision{main: main, sub: sub}
+func NewRevision(main, sub int64, nodes []string) Revision {
+	return Revision{main: main, sub: sub, nodes: nodes}
 }
 func (a Revision) String() string {
 	return fmt.Sprintf("%d", a.main)
@@ -47,6 +49,12 @@ func (a Revision) GetMain() int64 {
 }
 func (a Revision) GetSub() int64 {
 	return a.sub
+}
+func (a Revision) GetNodes() []string {
+	return a.nodes
+}
+func (a *Revision) SetNodes(ns []string) {
+	a.nodes = ns
 }
 func (a Revision) GreaterThan(b Revision) bool {
 	if a.main > b.main {

@@ -19,6 +19,8 @@ func Factory(databaseType, databaseUrl string) (Database, error) {
 	switch databaseType {
 	case "redis":
 		return createRedisDatabase(databaseUrl)
+	case "mem":
+		return NewMemDatabase(databaseUrl), nil
 	default:
 		return nil, &DatabaseNotImplementedError{databaseType}
 	}

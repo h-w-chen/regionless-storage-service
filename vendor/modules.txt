@@ -21,7 +21,7 @@ github.com/gomodule/redigo/redis
 # github.com/google/btree v1.1.2
 ## explicit
 github.com/google/btree
-# github.com/grpc-ecosystem/grpc-gateway/v2 v2.10.3
+# github.com/grpc-ecosystem/grpc-gateway/v2 v2.11.0
 ## explicit
 github.com/grpc-ecosystem/grpc-gateway/v2/internal/httprule
 github.com/grpc-ecosystem/grpc-gateway/v2/runtime
@@ -63,7 +63,7 @@ golang.org/x/net/http2/hpack
 golang.org/x/net/idna
 golang.org/x/net/internal/timeseries
 golang.org/x/net/trace
-# golang.org/x/sys v0.0.0-20220708085239-5a0f0661e09d
+# golang.org/x/sys v0.0.0-20220715151400-c0bba94af5f8
 ## explicit
 golang.org/x/sys/internal/unsafeheader
 golang.org/x/sys/unix
@@ -74,13 +74,13 @@ golang.org/x/text/secure/bidirule
 golang.org/x/text/transform
 golang.org/x/text/unicode/bidi
 golang.org/x/text/unicode/norm
-# google.golang.org/genproto v0.0.0-20220711132622-b6f31b0ceb50
+# google.golang.org/genproto v0.0.0-20220720214146-176da50484ac
 ## explicit
 google.golang.org/genproto/googleapis/api/annotations
 google.golang.org/genproto/googleapis/api/httpbody
 google.golang.org/genproto/googleapis/rpc/status
 google.golang.org/genproto/protobuf/field_mask
-# google.golang.org/grpc v1.47.0
+# google.golang.org/grpc v1.48.0
 ## explicit
 google.golang.org/grpc
 google.golang.org/grpc/attributes
