@@ -29,3 +29,11 @@ func (n *ChainNode) Read(key string) (string, error) {
 func (n *ChainNode) Delete(key string) error {
 	return n.db.Delete(key)
 }
+
+func (n *ChainNode) GetID() int {
+	return n.id
+}
+
+func (n *ChainNode) GetNext() *ChainNode {
+	return n.next
+}

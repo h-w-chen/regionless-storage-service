@@ -23,6 +23,14 @@ func (c *ChainPiping) Read(rev index.Revision) (string, error) {
 	return chain.Read(rev.String(), c.consistency)
 }
 
+func (c *ChainPiping) ReadTail(rev index.Revision) (string, error) {
+	chain, err := chain.NewChain(c.databaseType, rev.GetNodes())
+	if err != nil {
+		return "", err
+	}
+	return chain.GetTail().Read(rev.String())
+}
+
 func (c *ChainPiping) Write(rev index.Revision, val string) error {
 	chain, err := chain.NewChain(c.databaseType, rev.GetNodes())
 	if err != nil {
