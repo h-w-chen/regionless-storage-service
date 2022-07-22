@@ -1,8 +1,6 @@
 package chain
 
 import (
-	"fmt"
-
 	"github.com/regionless-storage-service/pkg/database"
 )
 
@@ -17,7 +15,6 @@ func NewNode(id int, db database.Database) *ChainNode {
 }
 
 func (n *ChainNode) Write(key, val string) {
-	fmt.Printf("***The key is %s and the value is %s\n", key, val)
 	n.db.Put(key, val)
 	if n.next != nil {
 		n.next.Write(key, val)

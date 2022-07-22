@@ -2,7 +2,6 @@ package chain
 
 import (
 	"errors"
-	"fmt"
 	"math/rand"
 
 	"github.com/regionless-storage-service/pkg/consistent"
@@ -30,7 +29,6 @@ func NewChain(nodeType string, nodes []string) (*Chain, error) {
 			prev.next = curr
 			prev = curr
 		} else {
-			fmt.Printf("The error is %v\n", err)
 			return nil, err
 		}
 	}
@@ -38,7 +36,7 @@ func NewChain(nodeType string, nodes []string) (*Chain, error) {
 }
 
 func (c *Chain) Write(key, val string, consistency consistent.CONSISTENCY) {
-	c.head.Write(key, val)
+	c.head.db.Put(key, val)
 	if consistency == consistent.LINEARIZABLE {
 		c.head.next.Write(key, val)
 	} else if consistency == consistent.SEQUENTIAL {

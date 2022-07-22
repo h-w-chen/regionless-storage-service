@@ -168,9 +168,9 @@ func (handler *KeyValueHandler) getKV(w http.ResponseWriter, r *http.Request) (s
 				}
 				return fmt.Sprintf("The values are %s from the revision %d\n", fmt.Sprint(m), fromRev), nil
 			}
-
 		} else {
 			rev, _, _, err := handler.indexTree.Get(ctx, []byte(key[0]), 0)
+
 			if err != nil {
 				span.RecordError(err)
 				span.SetStatus(codes.Error, err.Error())
