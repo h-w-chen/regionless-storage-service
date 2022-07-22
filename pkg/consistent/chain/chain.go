@@ -35,14 +35,30 @@ func NewChain(nodeType string, nodes []string) (*Chain, error) {
 	return &Chain{head: dummy.next, tail: prev, count: len(nodes)}, nil
 }
 
-func (c *Chain) Write(key, val string, consistency consistent.CONSISTENCY) {
-	c.head.db.Put(key, val)
+func (c *Chain) Write(key, val string, consistency consistent.CONSISTENCY) error {
+	if _, err := c.head.db.Put(key, val); err != nil {
+		return err
+	}
+	//Waiting for error handling design part
 	if consistency == consistent.LINEARIZABLE {
-		c.head.next.Write(key, val)
+		return c.head.next.Write(key, val)
 	} else if consistency == consistent.SEQUENTIAL {
 		go c.head.next.Write(key, val)
 	}
+	return nil
+}
 
+func (c *Chain) Delete(key string, consistency consistent.CONSISTENCY) error {
+	if err := c.head.db.Delete(key); err != nil {
+		return err
+	}
+	//Waiting for error handling design part
+	if consistency == consistent.LINEARIZABLE {
+		return c.head.next.Delete(key)
+	} else if consistency == consistent.SEQUENTIAL {
+		go c.head.next.Delete(key)
+	}
+	return nil
 }
 
 func (c *Chain) Read(key string, consistency consistent.CONSISTENCY) (string, error) {

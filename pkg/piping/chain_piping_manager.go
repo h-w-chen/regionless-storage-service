@@ -31,3 +31,12 @@ func (c *ChainPiping) Write(rev index.Revision, val string) error {
 	chain.Write(rev.String(), val, c.consistency)
 	return nil
 }
+
+func (c *ChainPiping) Delete(rev index.Revision) error {
+	chain, err := chain.NewChain(c.databaseType, rev.GetNodes())
+	if err != nil {
+		return err
+	}
+	chain.Delete(rev.String(), c.consistency)
+	return nil
+}

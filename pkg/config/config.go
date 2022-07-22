@@ -22,12 +22,12 @@ type KVConfiguration struct {
 	StoreType      string
 	Stores         []KVStore
 	BucketSize     int64
+	ReplicaNum     int
 }
 type KVStore struct {
-	Name     string
-	Host     string
-	Port     int
-	Replicas []KVStore
+	Name string
+	Host string
+	Port int
 }
 
 func NewKVConfiguration(fileName string) (KVConfiguration, error) {

@@ -11,15 +11,11 @@ import (
 
 var pools map[string]*redis.Pool
 
-func InitPools(stores []config.KVStore) {
+func InitStorageInstancePool(stores []config.KVStore) {
 	pools = make(map[string]*redis.Pool)
 	for _, conf := range stores {
 		url, pool := initPool(conf.Host, conf.Port)
 		pools[url] = pool
-		for _, replica := range conf.Replicas {
-			url, pool = initPool(replica.Host, replica.Port)
-			pools[url] = pool
-		}
 	}
 }
 

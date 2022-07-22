@@ -7,4 +7,5 @@ import (
 type Piping interface {
 	Read(revision index.Revision) (string, error)
 	Write(rev index.Revision, val string) error
+	Delete(rev index.Revision) error
 }

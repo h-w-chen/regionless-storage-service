@@ -48,7 +48,7 @@ func main() {
 	if err != nil {
 		panic(fmt.Errorf("error setting gateway agent configuration: %v", err))
 	}
-	database.InitPools(conf.Stores)
+	database.InitStorageInstancePool(conf.Stores)
 
 	url := flag.String("url", ":8090", "proxy url")
 	flag.Parse()
@@ -86,14 +86,19 @@ type KV struct {
 
 func NewKeyValueHandler(conf config.KVConfiguration) *KeyValueHandler {
 	ring := consistent.NewRendezvous(nil, testHash{})
-	for _, store := range conf.Stores {
-		node := fmt.Sprintf("%s:%d", store.Host, store.Port)
-		rs := make([]string, len(store.Replicas))
-		for idx, replica := range store.Replicas {
-			rs[idx] = fmt.Sprintf("%s:%d", replica.Host, replica.Port)
+	n := len(conf.Stores)
+	stores := make([]string, n)
+	for idx, store := range conf.Stores {
+		stores[idx] = fmt.Sprintf("%s:%d", store.Host, store.Port)
+	}
+
+	for idx, store := range stores {
+		rs := make([]string, conf.ReplicaNum)
+		for i := 0; i < len(rs); i++ {
+			rs[i] = stores[(idx+i+1)%n]
 		}
-		node = node + "," + strings.Join(rs, ",")
-		ring.AddNode(testNode(node))
+		nodes := store + "," + strings.Join(rs, ",")
+		ring.AddNode(testNode(nodes))
 	}
 	piping := piping.NewChainPiping(conf.StoreType, ca.LINEARIZABLE)
 	return &KeyValueHandler{ch: ring, conf: conf, indexTree: index.NewTreeIndex(), piping: piping}
@@ -232,8 +237,8 @@ func (handler *KeyValueHandler) createKV(w http.ResponseWriter, r *http.Request)
 		klog.Errorf("Failed to read key value with the error %v", err)
 		return "", err
 	}
-	x := map[string]string{}
-	err = json.Unmarshal(byteValue, &x)
+	payload := map[string]string{}
+	err = json.Unmarshal(byteValue, &payload)
 
 	if err != nil {
 		rootSpan.RecordError(err)
@@ -244,7 +249,7 @@ func (handler *KeyValueHandler) createKV(w http.ResponseWriter, r *http.Request)
 	{
 		_, span := otel.Tracer(config.TraceName).Start(ctx, "set kv", trace.WithSpanKind(trace.SpanKindClient))
 		defer span.End()
-		err := handler.piping.Write(newRev, x["value"])
+		err := handler.piping.Write(newRev, payload["value"])
 		if err != nil {
 			span.RecordError(err)
 			span.SetStatus(codes.Error, err.Error())
@@ -254,10 +259,10 @@ func (handler *KeyValueHandler) createKV(w http.ResponseWriter, r *http.Request)
 	{
 		_, span := otel.Tracer(config.TraceName).Start(ctx, "put index")
 		defer span.End()
-		handler.indexTree.Put([]byte(x["key"]), newRev)
+		handler.indexTree.Put([]byte(payload["key"]), newRev)
 	}
 
-	return fmt.Sprintf("The key value pair (%s,%s) has been saved as revision %s at %s\n", x["key"], x["value"], strconv.FormatUint(rev, 10), node.String()), err
+	return fmt.Sprintf("The key value pair (%s,%s) has been saved as revision %s at %s\n", payload["key"], payload["value"], strconv.FormatUint(rev, 10), node.String()), err
 }
 
 func (handler *KeyValueHandler) deleteKV(w http.ResponseWriter, r *http.Request) (string, error) {
@@ -273,18 +278,11 @@ func (handler *KeyValueHandler) deleteKV(w http.ResponseWriter, r *http.Request)
 			rootSpan.SetStatus(codes.Error, err.Error())
 			return "", err
 		}
-		node := handler.ch.LocateKey(handler.getPrimaryRevBytesWithBucket(rev))
-		conn, err := database.Factory(handler.conf.StoreType, node.String())
-		if err != nil {
-			rootSpan.RecordError(err)
-			rootSpan.SetStatus(codes.Error, err.Error())
-			return "", err
-		}
 
 		{
 			_, span := otel.Tracer(config.TraceName).Start(ctx, "delete kv", trace.WithSpanKind(trace.SpanKindClient))
 			defer span.End()
-			err = conn.Delete(rev.String())
+			err = handler.piping.Delete(rev)
 			if err != nil {
 				span.RecordError(err)
 				span.SetStatus(codes.Error, err.Error())
@@ -294,10 +292,10 @@ func (handler *KeyValueHandler) deleteKV(w http.ResponseWriter, r *http.Request)
 		{
 			_, span := otel.Tracer(config.TraceName).Start(ctx, "tombstone index")
 			defer span.End()
-			handler.indexTree.Tombstone([]byte(key[0]), rev)
+			handler.indexTree.Tombstone([]byte(key[0]), index.NewRevision(int64(revision.GetGlobalIncreasingRevision()), rev.GetSub(), nil))
 		}
 
-		return fmt.Sprintf("The key %s has been removed at %s\n", key, node.String()), err
+		return fmt.Sprintf("The key %s has been removed at %s\n", key, rev.GetNodes()), err
 	}
 	return "", fmt.Errorf("the key is missing at the query %v", r.URL.Query())
 }
