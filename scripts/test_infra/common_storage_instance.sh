@@ -1,10 +1,15 @@
 #!/bin/bash
 
+# default value to be used when create_test_instances.sh is used by itself 
+
 AMI=ami-0b152cfd354c4c7a4 # ubuntu 18.04
-SECURITY_GROUP=${SECURITY_GROUP}
-INSTANCE_TYPE=t2.micro
-KEY_NAME=hwchen01
-INSTANCE_TAG=hw-rkv-lab-si
-ROOT_DISK_VOLUME=8
-NUM_OF_INSTANCE=2
-KEY_FILE=${KEY_FILE}
+INSTANCE_TYPE=${SI_INSTANCE_TYPE:=t2.micro}
+ROOT_DISK_VOLUME=${SI_ROOT_DISK_VOLUME:=8}
+
+SECURITY_GROUP=${SECURITY_GROUP:=regionless_kv_service}
+
+KEY_NAME=${KEY_NAME:=regionless_kv_service_key}
+KEY_FILE=${KEY_FILE:=regionless_kv_service_key.pem}
+
+INSTANCE_TAG=${SI_VM_NAME:=regionless-rkv-lab-si}
+NUM_OF_INSTANCE=${NUM_OF_SI:=2}

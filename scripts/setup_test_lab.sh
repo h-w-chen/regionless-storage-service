@@ -1,17 +1,40 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+print_usage() {
+    echo "Usage:"
+    echo "  cd scripts"
+    echo "  export KEY_NAME=<your ec2 key name>"
+    echo "  export KEY_FILE=<path-to-ec2-key-file>"
+    echo "  export NAME_TAG=<name_tag to identify your resources>"
+    echo "  and then run ./setup-test-lab.sh"
+}
+
+if [ -z ${NAME_TAG:=} ] || [ -z ${KEY_NAME:=} ] || [ -z ${KEY_FILE:=} ]
+then
+    echo "=^..^= One of more env variable need to be defined"
+    print_usage
+    echo "exited."
+      exit 1
+fi
+
 ## this is for AWS env only
 ## to set up singular region test lab of rkv perf
 
 ## get the default values
 . ./test-lab.val
 
-## start redis vm instances and rkv server
-## we will make a few changes to rkv config and start its service later
+#
+# start redis vm instances and rkv server
+#
+# we will make a few changes to rkv config and start its service later
 cd test_infra && ./create_test_instances.sh
 
+exit 0
+
+#
 ## start jaeger server
+#
 jeager_vmid=$(aws ec2 run-instances \
   --image-id ${JAEGER_AMI} \
   --security-groups ${SECURITY_GROUP} \
@@ -28,7 +51,9 @@ jaeger_vmip=$(aws ec2 describe-instances \
   --output text)
 echo "jaeger server ip addr is ${jaeger_vmip}"
 
+#
 ## identify rkv service
+#
 rkv_vmid=$(aws ec2 describe-instances --filters "Name=tag:Name, Values=${RKV_VM_NAME}" "Name=instance-state-name,Values=running" --output text --query 'Reservations[*].Instances[*].InstanceId')
 aws ec2 wait instance-status-ok --instance-ids ${rkv_vmid}
 rkv_vmip=$(aws ec2 describe-instances \
@@ -36,15 +61,22 @@ rkv_vmip=$(aws ec2 describe-instances \
   --query "Reservations[].Instances[].NetworkInterfaces[].PrivateIpAddresses[].Association.PublicIp" \
   --output text)
 echo "rkv service ip addr is ${rkv_vmip}"
+
+#
 ## launch rkv service with proper jaeger endpoint
+#
 ssh -i ${KEY_FILE} ubuntu@${rkv_vmip} -o "StrictHostKeyChecking no" <<ENDS
 cp /tmp/config.json ~/regionless-storage-service/cmd/http/config.json
 nohup ~/regionless-storage-service/main --jaeger-server=http://${jaeger_vmip}:14268 >/tmp/rkv.log 2>&1 &
 ENDS
 
+#
 ## todo: start prometheus server
+#
 
+#
 ## now, it is ok to run go-ycsb against rkv service
+#
 ycsb_vmid=$(aws ec2 run-instances \
   --image-id ${YCSB_AMI} \
   --security-groups ${SECURITY_GROUP} \
@@ -66,8 +98,11 @@ ssh -i ${KEY_FILE} ubuntu@${ycsb_vmip} -o "StrictHostKeyChecking no" <<ENDS
 sudo sed -i '/rkv/d' /etc/hosts
 echo ${rkv_vmip} rkv | sudo tee -a /etc/hosts > /dev/null
 ENDS
+
+#
 ## run workloada for now; saving output to /tmp/ycsb-a.log
 ## todo: run more workloads
+#
 ssh -i ${KEY_FILE} ubuntu@${ycsb_vmip} -o "StrictHostKeyChecking no" "cd work/go-ycsb && ./bin/go-ycsb load rkv -P workloads/workloada" | tee /tmp/ycsb-a.log
 echo "you can run other tests against rkv service now"
 echo "you can take a look at tracing at http://${jaeger_vmip}:16686"
