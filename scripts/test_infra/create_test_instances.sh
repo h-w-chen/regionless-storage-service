@@ -45,7 +45,7 @@ configure_redis() {
     echo ${ready_si_hosts}
     for host_ip in "${ready_si_hosts[@]}"
     do
-        echo "configuring redis on host $host_ip"
+        echo ">>>> configuring redis on host $host_ip"
 	ssh -i $KEY_FILE ubuntu@$host_ip "$(typeset -f configure_redis_fn); configure_redis_fn" &
     done
     wait
@@ -55,7 +55,7 @@ install_storage_binaries() {
     host_ip=$1
     echo ">>>> preparing host $host_ip"    
     until ssh -i $KEY_FILE -o "StrictHostKeyChecking no" ubuntu@$host_ip "$(typeset -f install_redis_fn); install_redis_fn"; do
-        echo ">>>> ssh not ready, retry in 3 sec"    
+        echo "ssh not ready, retry in 3 sec"    
         sleep 3
     done
 }
@@ -63,7 +63,7 @@ install_storage_binaries() {
 validate_redis_up(){
     resp=`ssh -i $KEY_FILE ubuntu@$host_ip "sudo redis-cli ping"`
     if [[ "$resp" == *"PONG"* ]]; then
-	      echo "Redis is ready on host ${host_public_ip}"
+	      echo ">>>> redis is ready on host ${host_public_ip}"
 	      ready_si_hosts+=$host_public_ip
     fi
 }
@@ -81,7 +81,7 @@ provision_storage_instances() {
     for i in $( eval echo {1..$NUM_OF_INSTANCE} ) 
     do
        log_name=$i.log
-       echo "ˁ˚ᴥ˚ˀ provisioning storage host ${i}, see log ${log_name} for details"
+       echo ">>>> ˁ˚ᴥ˚ˀ provisioning storage host ${i}, see log ${log_name} for details"
        provision_a_storage_instance > ${log_name} 2>&1 & 
     done
     wait
@@ -93,7 +93,7 @@ provision_storage_instances() {
     
     configure_redis	# $ready_si_hosts is created just above 
 
-    echo "the following storage instance(s) have been provisioned:"
+    printf "${GREEN}>>>> the following storage instance(s) have been provisioned:${NC}\n"
     for host in "${ready_si_hosts[@]}"
     do
         echo "$host"
@@ -132,7 +132,7 @@ provision_rkv_instances() {
     source ./common_rkv_instance.sh
 
     log_name=rkv.log
-    echo "=^..^= provisioning rkv host, see log ${log_name} for details"
+    echo ">>>> =^..^= provisioning rkv host, see log ${log_name} for details"
     provision_a_rkv_instance >${log_name} 2>&1
     
     hosts=`aws ec2 describe-instances --query 'Reservations[].Instances[].PublicIpAddress' \
@@ -140,7 +140,7 @@ provision_rkv_instances() {
     					--output=text`
     read -ra ready_rkv_hosts<<< "$hosts" # split by whitespaces
 
-    echo "the following rkv instance(s) have been provisioned:"
+    printf "${GREEN}>>>> the following rkv instance(s) have been provisioned:${NC}\n"
     for host in "${ready_rkv_hosts[@]}"
     do
         echo "$host"
@@ -171,11 +171,12 @@ setup_config() {
     echo $config > $config_file_name 
 
     echo "config file created:"
+    printf "${GREEN} >>>> rkv service config file created:${NC}\n"
     jq . generated_config.json 
     
     for host in "${ready_rkv_hosts[@]}"
     do
-        echo "copying config.json to rkv instance $host:/tmp/config.json. !!Note the file name change here!!"
+        echo " >>>> copying config.json to rkv instance $host:/tmp/config.json. !!Note the file name change here!!"
 	scp -i $KEY_FILE generated_config.json ubuntu@$host_ip:/tmp/config.json
     done
 }

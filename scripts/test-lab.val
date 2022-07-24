@@ -42,3 +42,7 @@ export YCSB_AMI=ami-0aba4f5641629766e     #hw-ami-go-ycsb2
 export YCSB_INSTANCE_TYPE=t2.micro
 export YCSB_ROOT_DISK_VOLUME=16
 export YCSB_VM_NAME=${NAME_TAG}-rkv-lab-ycsb
+
+## logging
+GREEN='\033[0;32m'
+NC='\033[0m' # No Color

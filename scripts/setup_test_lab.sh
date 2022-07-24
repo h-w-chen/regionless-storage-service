@@ -23,13 +23,12 @@ fi
 
 ## get the default values
 . ./test-lab.val
-
+    
 #
 # start redis vm instances and rkv server
 #
 # we will make a few changes to rkv config and start its service later
 cd test_infra && ./create_test_instances.sh
-
 exit 0
 
 #
