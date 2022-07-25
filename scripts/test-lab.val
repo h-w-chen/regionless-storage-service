@@ -44,5 +44,6 @@ export YCSB_ROOT_DISK_VOLUME=16
 export YCSB_VM_NAME=${NAME_TAG}-rkv-lab-ycsb
 
 ## logging
-GREEN='\033[0;32m'
-NC='\033[0m' # No Color
+export GREEN='\033[0;32m'
+export LIGHT_GREEN='\033[1;32m'
+export NC='\033[0m' # No Color

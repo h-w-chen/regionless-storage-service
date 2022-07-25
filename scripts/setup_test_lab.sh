@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+source common.sh 
+
 print_usage() {
     echo "Usage:"
     echo "  cd scripts"
@@ -29,7 +31,6 @@ fi
 #
 # we will make a few changes to rkv config and start its service later
 cd test_infra && ./create_test_instances.sh
-exit 0
 
 #
 ## start jaeger server
@@ -48,7 +49,7 @@ jaeger_vmip=$(aws ec2 describe-instances \
   --instance-ids ${jeager_vmid} \
   --query "Reservations[].Instances[].NetworkInterfaces[].PrivateIpAddresses[].Association.PublicIp" \
   --output text)
-echo "jaeger server ip addr is ${jaeger_vmip}"
+print_green "jaeger server provisioned, ip addr is ${jaeger_vmip}"
 
 #
 ## identify rkv service
@@ -68,6 +69,7 @@ ssh -i ${KEY_FILE} ubuntu@${rkv_vmip} -o "StrictHostKeyChecking no" <<ENDS
 cp /tmp/config.json ~/regionless-storage-service/cmd/http/config.json
 nohup ~/regionless-storage-service/main --jaeger-server=http://${jaeger_vmip}:14268 >/tmp/rkv.log 2>&1 &
 ENDS
+print_green "rkv service launched on ${rkv_vmip}"
 
 #
 ## todo: start prometheus server
@@ -86,22 +88,26 @@ ycsb_vmid=$(aws ec2 run-instances \
   --output text \
   --query 'Instances[*].InstanceId')
 aws ec2 wait instance-status-ok --instance-ids ${ycsb_vmid}
+
 ycsb_vmip=$(aws ec2 describe-instances \
   --instance-ids ${ycsb_vmid} \
   --query "Reservations[].Instances[].NetworkInterfaces[].PrivateIpAddresses[].Association.PublicIp" \
   --output text)
-echo "ycsb client ip addr is ${rkv_vmip}"
+print_green "ycsb client ip addr is ${rkv_vmip}"
 echo "rkv endpoint is at ${rkv_vmip}:8090"
+
 # set rkv ip addr properly for go-ycsb to test against
 ssh -i ${KEY_FILE} ubuntu@${ycsb_vmip} -o "StrictHostKeyChecking no" <<ENDS
 sudo sed -i '/rkv/d' /etc/hosts
 echo ${rkv_vmip} rkv | sudo tee -a /etc/hosts > /dev/null
 ENDS
 
+print_green "tests can be fired up against rkv service now  d(^o^)b"
 #
 ## run workloada for now; saving output to /tmp/ycsb-a.log
 ## todo: run more workloads
 #
-ssh -i ${KEY_FILE} ubuntu@${ycsb_vmip} -o "StrictHostKeyChecking no" "cd work/go-ycsb && ./bin/go-ycsb load rkv -P workloads/workloada" | tee /tmp/ycsb-a.log
-echo "you can run other tests against rkv service now"
-echo "you can take a look at tracing at http://${jaeger_vmip}:16686"
+echo "running a test, log in /tmp/ycsb-a.log"
+ssh -i ${KEY_FILE} ubuntu@${ycsb_vmip} -o "StrictHostKeyChecking no" "cd work/go-ycsb && ./bin/go-ycsb load rkv -P workloads/workloada" > /tmp/ycsb-a.log 2>&1
+
+print_green "jaeger tracing at http://${jaeger_vmip}:16686"
