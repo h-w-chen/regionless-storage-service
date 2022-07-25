@@ -116,7 +116,7 @@ print_green "rkv service launched on ${rkv_vmip}"
 #
 # set rkv ip addr properly for go-ycsb to test against
 #
-ssh -i ${KEY_FILE} ubuntu@${ycsb_vmip} -o "StrictHostKeyChecking no" "$(typeset -f config_ycsb_fn); config_ycsb_fn $rkv_vmip"
+ssh -i ${KEY_FILE} ubuntu@${ycsb_vmip} -o "StrictHostKeyChecking no" "$(typeset -f config_ycsb_fn); config_ycsb_fn $rkv_vmip" >>rkv.log 2>&1
 print_green "\nRKV TEST LAB READY d(^o^)b"
 print_green "tests can be fired up against rkv service now"
 
