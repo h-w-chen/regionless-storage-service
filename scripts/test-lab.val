@@ -4,26 +4,36 @@ set -u
 ## e.g. KEY_NAME=hwchen01
 : $KEY_NAME
 : $KEY_FILE     #~/.ssh/aws-hwchen01.pem
+: $NAME_TAG
 
-export KEY_NAME KEY_FILE
+export KEY_NAME KEY_FILE NAME_TAG
 
 ## common to lab
 export SECURITY_GROUP=regionless_kv_service
 export LAB_TAG=rkv_perf_lab                #todo: use it to tag all vms of perf lab
 
 ## of redis backends
+export NUM_OF_SI=2 
+
+## disk size
+export RKV_ROOT_DISK_VOLUME=32
+export SI_ROOT_DISK_VOLUME=32
+
+## instance size
+export RKV_INSTANCE_TYPE=t2.micro 
+export SI_INSTANCE_TYPE=t2.micro 
 
 ## of rkv service
 export RKV_AMI=ami-0bf8f78223ea6f3f6       #hw-ami-rkv-test2
 export RKV_INSTANCE_TYPE=t2.micro
-export RKV_ROOT_DISK_VOLUME=32
-export RKV_VM_NAME=hw-rkv-lab-rkv
+export RKV_VM_NAME=${NAME_TAG}-rkv-lab-rkv
+export SI_VM_NAME=${NAME_TAG}-rkv-lab-si
 
 ## of jaeger server
 export JAEGER_AMI=ami-0f501c5343cd5d65a    #hw-ami-jaeger5
 export JAEGER_INSTANCE_TYPE=t2.micro
 export JAEGER_ROOT_DISK_VOLUME=32
-export JAEGER_VM_NAME=hw-rkv-lab-jaeger
+export JAEGER_VM_NAME=${NAME_TAG}-rkv-lab-jaeger
 
 ## of prometheus server
 
@@ -31,4 +41,9 @@ export JAEGER_VM_NAME=hw-rkv-lab-jaeger
 export YCSB_AMI=ami-0aba4f5641629766e     #hw-ami-go-ycsb2
 export YCSB_INSTANCE_TYPE=t2.micro
 export YCSB_ROOT_DISK_VOLUME=16
-export YCSB_VM_NAME=hw-rkv-lab-ycsb
+export YCSB_VM_NAME=${NAME_TAG}-rkv-lab-ycsb
+
+## logging
+export GREEN='\033[0;32m'
+export LIGHT_GREEN='\033[1;32m'
+export NC='\033[0m' # No Color
