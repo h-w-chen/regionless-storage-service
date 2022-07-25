@@ -44,7 +44,6 @@ configure_redis_fn() {
 }
 
 configure_redis() {
-    echo ${ready_si_hosts}
     for host_ip in "${ready_si_hosts[@]}"
     do
         echo "configuring redis on host $host_ip"

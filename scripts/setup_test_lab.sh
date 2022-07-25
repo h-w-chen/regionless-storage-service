@@ -1,6 +1,18 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+launch_rkv_fn() {
+    jaeger_vmip=$1
+    cp /tmp/config.json ~/regionless-storage-service/cmd/http/config.json
+    nohup ~/regionless-storage-service/main --jaeger-server=http://${jaeger_vmip}:14268 >/tmp/rkv.log 2>&1 &
+}
+
+config_ycsb_fn() {
+    rkv_vmip=$1
+    sudo sed -i '/rkv/d' /etc/hosts
+    echo ${rkv_vmip} rkv | sudo tee -a /etc/hosts > /dev/null
+}
+
 source common.sh 
 
 print_usage() {
@@ -35,7 +47,7 @@ cd test_infra && ./create_test_instances.sh
 #
 ## start jaeger server
 #
-jeager_vmid=$(aws ec2 run-instances \
+jaeger_vmid=$(aws ec2 run-instances \
   --image-id ${JAEGER_AMI} \
   --security-groups ${SECURITY_GROUP} \
   --instance-type ${JAEGER_INSTANCE_TYPE} \
@@ -44,9 +56,9 @@ jeager_vmid=$(aws ec2 run-instances \
   --block-device-mappings "DeviceName=/dev/sda1,Ebs={VolumeSize=${JAEGER_ROOT_DISK_VOLUME}}" \
   --output text \
   --query 'Instances[*].InstanceId')
-aws ec2 wait instance-status-ok --instance-ids ${jeager_vmid}
+aws ec2 wait instance-status-ok --instance-ids ${jaeger_vmid}
 jaeger_vmip=$(aws ec2 describe-instances \
-  --instance-ids ${jeager_vmid} \
+  --instance-ids ${jaeger_vmid} \
   --query "Reservations[].Instances[].NetworkInterfaces[].PrivateIpAddresses[].Association.PublicIp" \
   --output text)
 print_green "jaeger server provisioned, ip addr is ${jaeger_vmip}"
@@ -65,10 +77,7 @@ echo "rkv service ip addr is ${rkv_vmip}"
 #
 ## launch rkv service with proper jaeger endpoint
 #
-ssh -i ${KEY_FILE} ubuntu@${rkv_vmip} -o "StrictHostKeyChecking no" <<ENDS
-cp /tmp/config.json ~/regionless-storage-service/cmd/http/config.json
-nohup ~/regionless-storage-service/main --jaeger-server=http://${jaeger_vmip}:14268 >/tmp/rkv.log 2>&1 &
-ENDS
+ssh -i ${KEY_FILE} ubuntu@${rkv_vmip} -o "StrictHostKeyChecking no" "$(typeset -f launch_rkv_fn); launch_rkv_fn $jaeger_vmip"
 print_green "rkv service launched on ${rkv_vmip}"
 
 #
@@ -96,18 +105,17 @@ ycsb_vmip=$(aws ec2 describe-instances \
 print_green "ycsb client ip addr is ${rkv_vmip}"
 echo "rkv endpoint is at ${rkv_vmip}:8090"
 
+#
 # set rkv ip addr properly for go-ycsb to test against
-ssh -i ${KEY_FILE} ubuntu@${ycsb_vmip} -o "StrictHostKeyChecking no" <<ENDS
-sudo sed -i '/rkv/d' /etc/hosts
-echo ${rkv_vmip} rkv | sudo tee -a /etc/hosts > /dev/null
-ENDS
+#
+ssh -i ${KEY_FILE} ubuntu@${ycsb_vmip} -o "StrictHostKeyChecking no" "$(typeset -f config_ycsb_fn); config_ycsb_fn $rkv_vmip"
+print_green "\ntests can be fired up against rkv service now  d(^o^)b"
 
-print_green "tests can be fired up against rkv service now  d(^o^)b"
 #
 ## run workloada for now; saving output to /tmp/ycsb-a.log
 ## todo: run more workloads
 #
-echo "running a test, log in /tmp/ycsb-a.log"
+echo "firing a test, log in /tmp/ycsb-a.log"
 ssh -i ${KEY_FILE} ubuntu@${ycsb_vmip} -o "StrictHostKeyChecking no" "cd work/go-ycsb && ./bin/go-ycsb load rkv -P workloads/workloada" > /tmp/ycsb-a.log 2>&1
 
 print_green "jaeger tracing at http://${jaeger_vmip}:16686"
