@@ -13,6 +13,32 @@ config_ycsb_fn() {
     echo ${rkv_vmip} rkv | sudo tee -a /etc/hosts > /dev/null
 }
 
+create_jaeger_vm() {
+    jaeger_vmid=$(aws ec2 run-instances \
+      --image-id ${JAEGER_AMI} \
+      --security-groups ${SECURITY_GROUP} \
+      --instance-type ${JAEGER_INSTANCE_TYPE} \
+      --key-name ${KEY_NAME} \
+      --tag-specifications "ResourceType=instance,Tags=[{Key=Name,Value=${JAEGER_VM_NAME}}]" \
+      --block-device-mappings "DeviceName=/dev/sda1,Ebs={VolumeSize=${JAEGER_ROOT_DISK_VOLUME}}" \
+      --output text \
+      --query 'Instances[*].InstanceId')
+    aws ec2 wait instance-status-ok --instance-ids ${jaeger_vmid}
+}
+
+create_ycsb_vm() {
+    ycsb_vmid=$(aws ec2 run-instances \
+      --image-id ${YCSB_AMI} \
+      --security-groups ${SECURITY_GROUP} \
+      --instance-type ${YCSB_INSTANCE_TYPE} \
+      --key-name ${KEY_NAME} \
+      --tag-specifications "ResourceType=instance,Tags=[{Key=Name,Value=${YCSB_VM_NAME}}]" \
+      --block-device-mappings "DeviceName=/dev/sda1,Ebs={VolumeSize=${YCSB_ROOT_DISK_VOLUME}}" \
+      --output text \
+      --query 'Instances[*].InstanceId')
+    aws ec2 wait instance-status-ok --instance-ids ${ycsb_vmid}
+}
+
 source common.sh 
 
 print_usage() {
@@ -32,6 +58,8 @@ then
       exit 1
 fi
 
+cat splash.art 
+
 ## this is for AWS env only
 ## to set up singular region test lab of rkv perf
 
@@ -45,23 +73,28 @@ fi
 cd test_infra && ./create_test_instances.sh
 
 #
-## start jaeger server
+## start jaeger & ycsb vm 
+## todo: start prometheus server
 #
-jaeger_vmid=$(aws ec2 run-instances \
-  --image-id ${JAEGER_AMI} \
-  --security-groups ${SECURITY_GROUP} \
-  --instance-type ${JAEGER_INSTANCE_TYPE} \
-  --key-name ${KEY_NAME} \
-  --tag-specifications "ResourceType=instance,Tags=[{Key=Name,Value=${JAEGER_VM_NAME}}]" \
-  --block-device-mappings "DeviceName=/dev/sda1,Ebs={VolumeSize=${JAEGER_ROOT_DISK_VOLUME}}" \
-  --output text \
-  --query 'Instances[*].InstanceId')
-aws ec2 wait instance-status-ok --instance-ids ${jaeger_vmid}
+echo "creating jaeger vm and ycsb vm"
+jaeger_vmid=""
+ycsb_vmid=""
+create_jaeger_vm &
+create_ycsb_vm &
+wait
+
 jaeger_vmip=$(aws ec2 describe-instances \
-  --instance-ids ${jaeger_vmid} \
+  --filters "Name=tag-value,Values=${JAEGER_VM_NAME}" "Name=instance-state-name,Values=running" \
   --query "Reservations[].Instances[].NetworkInterfaces[].PrivateIpAddresses[].Association.PublicIp" \
   --output text)
-print_green "jaeger server provisioned, ip addr is ${jaeger_vmip}"
+print_green "jaeger vm provisioned, ip addr is ${jaeger_vmip}"
+
+ycsb_vmip=$(aws ec2 describe-instances \
+  --instance-ids ${ycsb_vmid} \
+  --filters "Name=tag-value,Values=${YCSB_VM_NAME}" "Name=instance-state-name,Values=running" \
+  --query "Reservations[].Instances[].NetworkInterfaces[].PrivateIpAddresses[].Association.PublicIp" \
+  --output text)
+print_green "ycsb vm provisioned, ip addr is ${ycsb_vmip}"
 
 #
 ## identify rkv service
@@ -69,7 +102,7 @@ print_green "jaeger server provisioned, ip addr is ${jaeger_vmip}"
 rkv_vmid=$(aws ec2 describe-instances --filters "Name=tag:Name, Values=${RKV_VM_NAME}" "Name=instance-state-name,Values=running" --output text --query 'Reservations[*].Instances[*].InstanceId')
 aws ec2 wait instance-status-ok --instance-ids ${rkv_vmid}
 rkv_vmip=$(aws ec2 describe-instances \
-  --instance-ids ${rkv_vmid} \
+  --filters "Name=tag-value,Values=${RKV_VM_NAME}" "Name=instance-state-name,Values=running" \
   --query "Reservations[].Instances[].NetworkInterfaces[].PrivateIpAddresses[].Association.PublicIp" \
   --output text)
 echo "rkv service ip addr is ${rkv_vmip}"
@@ -77,39 +110,15 @@ echo "rkv service ip addr is ${rkv_vmip}"
 #
 ## launch rkv service with proper jaeger endpoint
 #
-ssh -i ${KEY_FILE} ubuntu@${rkv_vmip} -o "StrictHostKeyChecking no" "$(typeset -f launch_rkv_fn); launch_rkv_fn $jaeger_vmip"
+ssh -i ${KEY_FILE} ubuntu@${rkv_vmip} -o "StrictHostKeyChecking no" "$(typeset -f launch_rkv_fn); launch_rkv_fn $jaeger_vmip" >>rkv.log 2>&1
 print_green "rkv service launched on ${rkv_vmip}"
-
-#
-## todo: start prometheus server
-#
-
-#
-## now, it is ok to run go-ycsb against rkv service
-#
-ycsb_vmid=$(aws ec2 run-instances \
-  --image-id ${YCSB_AMI} \
-  --security-groups ${SECURITY_GROUP} \
-  --instance-type ${YCSB_INSTANCE_TYPE} \
-  --key-name ${KEY_NAME} \
-  --tag-specifications "ResourceType=instance,Tags=[{Key=Name,Value=${YCSB_VM_NAME}}]" \
-  --block-device-mappings "DeviceName=/dev/sda1,Ebs={VolumeSize=${YCSB_ROOT_DISK_VOLUME}}" \
-  --output text \
-  --query 'Instances[*].InstanceId')
-aws ec2 wait instance-status-ok --instance-ids ${ycsb_vmid}
-
-ycsb_vmip=$(aws ec2 describe-instances \
-  --instance-ids ${ycsb_vmid} \
-  --query "Reservations[].Instances[].NetworkInterfaces[].PrivateIpAddresses[].Association.PublicIp" \
-  --output text)
-print_green "ycsb client ip addr is ${rkv_vmip}"
-echo "rkv endpoint is at ${rkv_vmip}:8090"
 
 #
 # set rkv ip addr properly for go-ycsb to test against
 #
 ssh -i ${KEY_FILE} ubuntu@${ycsb_vmip} -o "StrictHostKeyChecking no" "$(typeset -f config_ycsb_fn); config_ycsb_fn $rkv_vmip"
-print_green "\ntests can be fired up against rkv service now  d(^o^)b"
+print_green "\nRKV TEST LAB READY d(^o^)b"
+print_green "tests can be fired up against rkv service now"
 
 #
 ## run workloada for now; saving output to /tmp/ycsb-a.log

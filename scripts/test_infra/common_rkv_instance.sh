@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # default value to be used when create_test_instances.sh is used by itself 
+# effective values are defined in test-lab.val when run from setup_test_lab.sh
 
 AMI=ami-0b152cfd354c4c7a4 # ubuntu 18.04
 INSTANCE_TYPE=${RKV_INSTANCE_TYPE:=t2.micro}
