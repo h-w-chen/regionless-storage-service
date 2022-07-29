@@ -31,18 +31,20 @@ import (
 func main() {
 	// -trace-env="onebox-730", for instance, is a good name for 730 milestone, one-box rkv system
 	flag.StringVar(&config.TraceEnv, "trace-env", config.DefaultTraceEnv, "environment name displayed in tracing system")
-	jaegerServer := flag.String("jaeger-server", "http://localhost:14268", "jaeger server endpoint in form of http://host-ip:port")
-	flag.Parse()
+	if len(config.TraceEnv) != 0 {
+		jaegerServer := flag.String("jaeger-server", "http://localhost:14268", "jaeger server endpoint in form of http://host-ip:port")
+		// for now, only support http protocol of jaeger service
+		jaegerEndpoint := *jaegerServer + "/api/traces"
 
-	// for now, only support http protocol of jaeger service
-	jaegerEndpoint := *jaegerServer + "/api/traces"
+		traceProvider, err := tracerProvider(jaegerEndpoint)
+		if err != nil {
+			log.Fatal(err)
+		}
 
-	traceProvider, err := tracerProvider(jaegerEndpoint)
-	if err != nil {
-		log.Fatal(err)
+		otel.SetTracerProvider(traceProvider)
 	}
 
-	otel.SetTracerProvider(traceProvider)
+	flag.Parse()
 
 	conf, err := config.NewKVConfiguration("config.json")
 	if err != nil {
