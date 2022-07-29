@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/binary"
 	"encoding/json"
 	"flag"
@@ -163,7 +164,7 @@ func (handler *KeyValueHandler) getKV(w http.ResponseWriter, r *http.Request) (s
 				defer span.End()
 
 				revs := handler.indexTree.RangeSince([]byte(key[0]), nil, int64(fromRev))
-				rets, err := handler.getValuesByRevs(revs)
+				rets, err := handler.getValuesByRevs(ctx, revs)
 				if err != nil {
 					span.RecordError(err)
 					span.SetStatus(codes.Error, err.Error())
@@ -187,7 +188,7 @@ func (handler *KeyValueHandler) getKV(w http.ResponseWriter, r *http.Request) (s
 			{
 				_, span := otel.Tracer(config.TraceName).Start(ctx, "get kv", trace.WithSpanKind(trace.SpanKindClient))
 				defer span.End()
-				ret, err := handler.getValueByRev(rev)
+				ret, err := handler.getValueByRev(ctx, rev)
 				if err != nil {
 					span.RecordError(err)
 					span.SetStatus(codes.Error, err.Error())
@@ -200,19 +201,27 @@ func (handler *KeyValueHandler) getKV(w http.ResponseWriter, r *http.Request) (s
 	}
 	return "", fmt.Errorf("the key is missing at the query %v", r.URL.Query())
 }
-func (handler *KeyValueHandler) getValueByRev(rev index.Revision) (string, error) {
-	ret, err := handler.piping.Read(rev)
+func (handler *KeyValueHandler) getValueByRev(ctx context.Context, rev index.Revision) (string, error) {
+	ctx, span := otel.Tracer(config.TraceName).Start(ctx, "getValueByRev")
+	defer span.End()
+	ret, err := handler.piping.Read(ctx, rev)
 	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		return "", err
 	}
 	return ret, nil
 }
 
-func (handler *KeyValueHandler) getValuesByRevs(revs []index.Revision) ([]string, error) {
+func (handler *KeyValueHandler) getValuesByRevs(ctx context.Context, revs []index.Revision) ([]string, error) {
+	ctx, span := otel.Tracer(config.TraceName).Start(ctx, "getValuesByRevs")
+	defer span.End()
 	n := len(revs)
 	res := make([]string, n)
 	for i := 0; i < n; i++ {
-		if ret, err := handler.getValueByRev(revs[i]); err != nil {
+		if ret, err := handler.getValueByRev(ctx, revs[i]); err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, err.Error())
 			return nil, err
 		} else {
 			res[i] = string(ret)
@@ -251,7 +260,7 @@ func (handler *KeyValueHandler) createKV(w http.ResponseWriter, r *http.Request)
 	{
 		_, span := otel.Tracer(config.TraceName).Start(ctx, "set kv", trace.WithSpanKind(trace.SpanKindClient))
 		defer span.End()
-		err := handler.piping.Write(newRev, payload["value"])
+		err := handler.piping.Write(ctx, newRev, payload["value"])
 		if err != nil {
 			span.RecordError(err)
 			span.SetStatus(codes.Error, err.Error())
@@ -284,7 +293,7 @@ func (handler *KeyValueHandler) deleteKV(w http.ResponseWriter, r *http.Request)
 		{
 			_, span := otel.Tracer(config.TraceName).Start(ctx, "delete kv", trace.WithSpanKind(trace.SpanKindClient))
 			defer span.End()
-			err = handler.piping.Delete(rev)
+			err = handler.piping.Delete(ctx, rev)
 			if err != nil {
 				span.RecordError(err)
 				span.SetStatus(codes.Error, err.Error())
