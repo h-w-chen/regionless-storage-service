@@ -1,6 +1,7 @@
 package chain
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -15,7 +16,7 @@ func TestNewChainWithDatabases(t *testing.T) {
 	for i := 0; i < len(dbs); i++ {
 		dbs[i] = mock.NewMockDatabase()
 	}
-	chain := chain.NewChainWithDatbases(dbs)
+	chain := chain.NewChainWithDatbases(context.TODO(), dbs)
 	if chain.GetHead() == nil {
 		t.Fatal("head is empty")
 	}
@@ -48,9 +49,9 @@ func TestChainWriteLINEARIZABLE(t *testing.T) {
 	for i := 0; i < len(dbs); i++ {
 		dbs[i] = mock.NewMockDatabase()
 	}
-	chain := chain.NewChainWithDatbases(dbs)
+	chain := chain.NewChainWithDatbases(context.TODO(), dbs)
 	chain.Write("k1", "v1", consistent.LINEARIZABLE)
-	if v1, err := chain.GetTail().Read("k1"); err != nil {
+	if v1, err := chain.GetTail().Read(context.TODO(), "k1"); err != nil {
 		t.Fatalf("tail failed to read  with error %v", err)
 	} else if v1 != "v1" {
 		t.Fatalf("tail failed to read a correct value %s", v1)
@@ -62,13 +63,13 @@ func TestChainWriteSEQUENTIAL(t *testing.T) {
 	for i := 0; i < len(dbs); i++ {
 		dbs[i] = mock.NewMockDatabaseWithLatency(0, 5)
 	}
-	chain := chain.NewChainWithDatbases(dbs)
+	chain := chain.NewChainWithDatbases(context.TODO(), dbs)
 	chain.Write("k1", "v1", consistent.SEQUENTIAL)
-	if _, err := chain.GetTail().Read("k1"); err == nil {
+	if _, err := chain.GetTail().Read(context.TODO(), "k1"); err == nil {
 		t.Fatalf("tail failed is supposed not to find the key")
 	}
 	time.Sleep(5 * time.Second)
-	if v1, err := chain.GetTail().Read("k1"); err != nil {
+	if v1, err := chain.GetTail().Read(context.TODO(), "k1"); err != nil {
 		t.Fatalf("tail failed to read  with error %v", err)
 	} else if v1 != "v1" {
 		t.Fatalf("tail failed to read a correct value %s", v1)
