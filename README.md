@@ -1,7 +1,7 @@
 # Regionless KV Service (RKV)
 
 ## What Is RKV?
-RKV overcomes various limitations of ETCD such as storage capacity, and provides a "regionless" style storage service for large scale geo-distributed platform such as [Centaurus Arktos](https://github.com/CentaurusInfra/arktos). Versioned key-value pairs are managed (geo-partition, replicated with flexible consistency) and exposed for access with compatible APIs of ETCD such as range query and list-watch. 
+RKV overcomes various limitations of ETCD (e.g., storage capacity), and provides a "regionless" style storage service for large scale geo-distributed platform such as [Centaurus Arktos](https://github.com/CentaurusInfra/arktos). Versioned key-value pairs are managed (geo-partition, replicated with flexible consistency) and exposed for access with compatible APIs of ETCD such as range query and list-watch. 
 
 ## Highlighted Features
 
