@@ -5,7 +5,7 @@ RKV overcomes various limitations of ETCD (e.g., storage capacity), and provides
 
 ## Highlighted Features
 
-<img width="70%" alt="image" src="https://user-images.githubusercontent.com/252020/182258636-8c0d7e09-da4e-4209-b9f0-3c4f11e50c53.png">
+<img width="70%" alt="image" src="https://user-images.githubusercontent.com/252020/182421412-76683a94-7045-45a1-92a7-42a6da11b257.png">
 
 - Region-agnostic data access API
 - Partitioned and horrizontally scalable data storage with open backend store options
