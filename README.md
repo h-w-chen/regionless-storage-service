@@ -10,9 +10,9 @@ RKV overcomes various limitations of ETCD (e.g., storage capacity), and provides
 - Region-agnostic data access API
 - Partitioned and horrizontally scalable data storage with open backend store options
 - Replicated for HA and fast data access
-- Versioned Key-value pairs
-- CRUD API together with range query and list-watch
-- Supporting batch KV access (known as "txn" in ETCD)
+- Versioned key-value pairs
+- CRUD APIs together with range query and list-watch
+- Supporting batch KV access (aka "txn" in ETCD)
 - Flexible (Configurable) replication consistency including (but not limited to) linearizability, sequential, "session", and eventual consistency
 - Smart caching for high performance data access
 
