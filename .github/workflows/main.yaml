@@ -21,7 +21,6 @@ jobs:
     - name: Install dependencies
       run: |
         go version
-        go get github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway
         go get github.com/gomodule/redigo/redis
         go get github.com/google/btree
     - name: Run build

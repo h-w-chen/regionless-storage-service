@@ -23,6 +23,7 @@ type KVConfiguration struct {
 	Stores         []KVStore
 	BucketSize     int64
 	ReplicaNum     int
+	Concurrent     bool
 }
 type KVStore struct {
 	Name string

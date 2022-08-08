@@ -100,7 +100,7 @@ func NewKeyValueHandler(conf config.KVConfiguration) *KeyValueHandler {
 		nodes := store + "," + strings.Join(rs, ",")
 		ring.AddNode(testNode(nodes))
 	}
-	piping := piping.NewChainPiping(conf.StoreType, ca.LINEARIZABLE)
+	piping := piping.NewChainPiping(conf.StoreType, ca.LINEARIZABLE, conf.Concurrent)
 	return &KeyValueHandler{ch: ring, conf: conf, indexTree: index.NewTreeIndex(), piping: piping}
 }
 

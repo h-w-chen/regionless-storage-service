@@ -3,6 +3,7 @@
     "BucketSize": 10,
     "ReplicaNum": 2,
     "StoreType": "redis",
+    "Concurrent": true,
     "Stores": [
         {
             "Name": "store1",
