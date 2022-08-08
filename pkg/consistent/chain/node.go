@@ -65,3 +65,7 @@ func (n *ChainNode) GetID() int {
 func (n *ChainNode) GetNext() *ChainNode {
 	return n.next
 }
+
+func (n *ChainNode) GetDB() database.Database {
+	return n.db
+}
