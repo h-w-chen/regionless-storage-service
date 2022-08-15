@@ -86,19 +86,9 @@ type KV struct {
 
 func NewKeyValueHandler(conf config.KVConfiguration) *KeyValueHandler {
 	ring := consistent.NewRendezvous(nil, testHash{})
-	n := len(conf.Stores)
-	stores := make([]string, n)
-	for idx, store := range conf.Stores {
-		stores[idx] = fmt.Sprintf("%s:%d", store.Host, store.Port)
-	}
-
-	for idx, store := range stores {
-		rs := make([]string, conf.ReplicaNum)
-		for i := 0; i < len(rs); i++ {
-			rs[i] = stores[(idx+i+1)%n]
-		}
-		nodes := store + "," + strings.Join(rs, ",")
-		ring.AddNode(testNode(nodes))
+	stores := conf.GetReplications()
+	for _, store := range stores {
+		ring.AddNode(testNode(store))
 	}
 	piping := piping.NewChainPiping(conf.StoreType, ca.LINEARIZABLE, conf.Concurrent)
 	return &KeyValueHandler{ch: ring, conf: conf, indexTree: index.NewTreeIndex(), piping: piping}

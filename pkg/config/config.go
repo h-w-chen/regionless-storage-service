@@ -3,9 +3,11 @@ package config
 import (
 	"encoding/json"
 	"fmt"
+	"math/rand"
 	"os"
 	"path"
 	"runtime"
+	"strings"
 )
 
 const (
@@ -26,9 +28,10 @@ type KVConfiguration struct {
 	Concurrent     bool
 }
 type KVStore struct {
-	Name string
-	Host string
-	Port int
+	Region string
+	Name   string
+	Host   string
+	Port   int
 }
 
 func NewKVConfiguration(fileName string) (KVConfiguration, error) {
@@ -47,4 +50,49 @@ func NewKVConfiguration(fileName string) (KVConfiguration, error) {
 
 	err = decoder.Decode(&configuration)
 	return configuration, err
+}
+
+func (c *KVConfiguration) GetReplications() []string {
+	var localStores []string
+	var neighborStores []string
+	var remoteStores []string
+	for _, store := range c.Stores {
+		switch region := store.Region; region {
+		case "local":
+			localStores = append(localStores, fmt.Sprintf("%s:%d", store.Host, store.Port))
+		case "neighbor":
+			neighborStores = append(neighborStores, fmt.Sprintf("%s:%d", store.Host, store.Port))
+		case "remote":
+			remoteStores = append(remoteStores, fmt.Sprintf("%s:%d", store.Host, store.Port))
+		}
+	}
+	n := len(localStores)
+	replications := make([]string, n)
+	for idx := 0; idx < n; idx++ {
+		total := c.ReplicaNum
+		replics := make([]string, total)
+		total--
+		if remote := selectRandom(remoteStores); remote != "" {
+			replics[total] = remote
+			total--
+		}
+		if neighbor := selectRandom(neighborStores); neighbor != "" {
+			replics[total] = neighbor
+			total--
+		}
+		for i := 0; i < total+1; i++ {
+			replics[total] = localStores[(idx+i)%n]
+			total--
+		}
+		replications[idx] = strings.Join(replics, ",")
+	}
+	return replications
+}
+
+func selectRandom(array []string) string {
+	if len(array) == 0 {
+		return ""
+	}
+	randomIndex := rand.Intn(len(array))
+	return array[randomIndex]
 }

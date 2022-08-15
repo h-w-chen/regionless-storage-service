@@ -1,28 +1,26 @@
 {
     "ConsistentHash": "rendezvous",
     "BucketSize": 10,
-    "ReplicaNum": 2,
+    "ReplicaNum": 3,
     "StoreType": "redis",
     "Concurrent": true,
     "Stores": [
         {
+            "Region": "local",
             "Name": "store1",
             "Host": "127.0.0.1",
             "Port": 6379
         },
         {
-            "Name": "store2",
-            "Host": "127.0.0.1",
-            "Port": 6380
-        },
-        {
+            "Region": "neighbor",
             "Name": "store3",
-            "Host": "172.31.12.96",
+            "Host": "172.31.9.140",
             "Port": 6379
         },
         {
+            "Region": "remote",
             "Name": "store4",
-            "Host": "172.31.12.96",
+            "Host": "172.31.9.140",
             "Port": 6380
         }
     ]
