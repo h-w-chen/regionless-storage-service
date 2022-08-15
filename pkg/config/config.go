@@ -28,10 +28,10 @@ type KVConfiguration struct {
 	Concurrent     bool
 }
 type KVStore struct {
-	Region string
-	Name   string
-	Host   string
-	Port   int
+	RegionType string
+	Name       string
+	Host       string
+	Port       int
 }
 
 func NewKVConfiguration(fileName string) (KVConfiguration, error) {
@@ -57,7 +57,7 @@ func (c *KVConfiguration) GetReplications() []string {
 	var neighborStores []string
 	var remoteStores []string
 	for _, store := range c.Stores {
-		switch region := store.Region; region {
+		switch region := store.RegionType; region {
 		case "local":
 			localStores = append(localStores, fmt.Sprintf("%s:%d", store.Host, store.Port))
 		case "neighbor":

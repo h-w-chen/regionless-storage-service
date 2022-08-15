@@ -6,19 +6,19 @@
     "Concurrent": true,
     "Stores": [
         {
-            "Region": "local",
+            "RegionType": "local",
             "Name": "store1",
             "Host": "127.0.0.1",
             "Port": 6379
         },
         {
-            "Region": "neighbor",
+            "RegionType": "neighbor",
             "Name": "store3",
             "Host": "172.31.9.140",
             "Port": 6379
         },
         {
-            "Region": "remote",
+            "RegionType": "remote",
             "Name": "store4",
             "Host": "172.31.9.140",
             "Port": 6380
