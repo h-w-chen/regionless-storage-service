@@ -68,15 +68,15 @@ type KeyValueHandler struct {
 	indexTree index.Index
 	piping    piping.Piping
 }
-type testNode string
+type rkvNode string
 
-func (tn testNode) String() string {
+func (tn rkvNode) String() string {
 	return string(tn)
 }
 
-type testHash struct{}
+type rkvHash struct{}
 
-func (th testHash) Hash(key []byte) uint64 {
+func (th rkvHash) Hash(key []byte) uint64 {
 	return xxhash.Sum64(key)
 }
 
@@ -85,10 +85,10 @@ type KV struct {
 }
 
 func NewKeyValueHandler(conf config.KVConfiguration) *KeyValueHandler {
-	ring := consistent.NewRendezvous(nil, testHash{})
+	ring := consistent.NewRendezvous(nil, rkvHash{})
 	stores := conf.GetReplications()
 	for _, store := range stores {
-		ring.AddNode(testNode(store))
+		ring.AddNode(rkvNode(store))
 	}
 	piping := piping.NewChainPiping(conf.StoreType, ca.LINEARIZABLE, conf.Concurrent)
 	return &KeyValueHandler{ch: ring, conf: conf, indexTree: index.NewTreeIndex(), piping: piping}

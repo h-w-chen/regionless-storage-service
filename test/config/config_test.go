@@ -30,13 +30,13 @@ func TestLocalStores(t *testing.T) {
 		{
 			RegionType: "neighbor",
 			Name:       "store4",
-			Host:       "127.0.0.4",
+			Host:       "172.31.9.140",
 			Port:       6379,
 		},
 		{
 			RegionType: "remote",
 			Name:       "store5",
-			Host:       "127.0.0.5",
+			Host:       "172.31.21.96",
 			Port:       6379,
 		},
 		{
@@ -62,10 +62,10 @@ func TestLocalStores(t *testing.T) {
 		if sr[0] != "127.0.0.1:6379" && sr[0] != "127.0.0.2:6379" && sr[0] != "127.0.0.3:6379" && sr[0] != "127.0.0.6:6379" {
 			t.Fatalf("The local replica is %s", sr[0])
 		}
-		if sr[1] != "127.0.0.4:6379" {
+		if sr[1] != "172.31.9.140:6379" {
 			t.Fatalf("The neighbor replica is %s", sr[0])
 		}
-		if sr[2] != "127.0.0.5:6379" {
+		if sr[2] != "172.31.21.96:6379" {
 			t.Fatalf("The remote replica is %s", sr[0])
 		}
 	}
@@ -88,19 +88,19 @@ func TestNeighborStores(t *testing.T) {
 		{
 			RegionType: "neighbor",
 			Name:       "store3",
-			Host:       "127.0.0.3",
+			Host:       "172.31.9.140",
 			Port:       6379,
 		},
 		{
 			RegionType: "neighbor",
 			Name:       "store4",
-			Host:       "127.0.0.4",
+			Host:       "172.31.9.141",
 			Port:       6379,
 		},
 		{
 			RegionType: "remote",
 			Name:       "store5",
-			Host:       "127.0.0.5",
+			Host:       "172.31.21.96",
 			Port:       6379,
 		},
 	}
@@ -120,10 +120,10 @@ func TestNeighborStores(t *testing.T) {
 		if sr[0] != "127.0.0.1:6379" && sr[0] != "127.0.0.2:6379" {
 			t.Fatalf("The local replica is %s", sr[0])
 		}
-		if sr[1] != "127.0.0.4:6379" && sr[1] != "127.0.0.3:6379" {
+		if sr[1] != "172.31.9.140:6379" && sr[1] != "172.31.9.141:6379" {
 			t.Fatalf("The neighbor replica is %s", sr[0])
 		}
-		if sr[2] != "127.0.0.5:6379" {
+		if sr[2] != "172.31.21.96:6379" {
 			t.Fatalf("The remote replica is %s", sr[0])
 		}
 	}
@@ -146,19 +146,19 @@ func TestRemoteStores(t *testing.T) {
 		{
 			RegionType: "neighbor",
 			Name:       "store3",
-			Host:       "127.0.0.3",
+			Host:       "172.31.9.140",
 			Port:       6379,
 		},
 		{
 			RegionType: "remote",
 			Name:       "store4",
-			Host:       "127.0.0.4",
+			Host:       "172.31.21.96",
 			Port:       6379,
 		},
 		{
 			RegionType: "remote",
 			Name:       "store5",
-			Host:       "127.0.0.5",
+			Host:       "172.31.21.97",
 			Port:       6379,
 		},
 	}
@@ -178,10 +178,10 @@ func TestRemoteStores(t *testing.T) {
 		if sr[0] != "127.0.0.1:6379" && sr[0] != "127.0.0.2:6379" {
 			t.Fatalf("The local replica is %s", sr[0])
 		}
-		if sr[1] != "127.0.0.3:6379" {
+		if sr[1] != "172.31.9.140:6379" {
 			t.Fatalf("The neighbor replica is %s", sr[0])
 		}
-		if sr[2] != "127.0.0.4:6379" && sr[2] != "127.0.0.5:6379" {
+		if sr[2] != "172.31.21.96:6379" && sr[2] != "172.31.21.97:6379" {
 			t.Fatalf("The remote replica is %s", sr[0])
 		}
 	}

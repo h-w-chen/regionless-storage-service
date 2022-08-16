@@ -56,6 +56,8 @@ func (c *KVConfiguration) GetReplications() []string {
 	var localStores []string
 	var neighborStores []string
 	var remoteStores []string
+	// Please refer to https://user-images.githubusercontent.com/252020/184443299-799f1ed4-493a-4ea2-a9ed-72e15a2737af.png
+	// for the following store categories.
 	for _, store := range c.Stores {
 		switch region := store.RegionType; region {
 		case "local":

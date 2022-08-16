@@ -20,7 +20,7 @@
         {
             "RegionType": "remote",
             "Name": "store4",
-            "Host": "172.31.9.140",
+            "Host": "172.31.12.96",
             "Port": 6380
         }
     ]
