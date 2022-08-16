@@ -8,6 +8,7 @@ import (
 	"path"
 	"runtime"
 	"strings"
+	"time"
 )
 
 const (
@@ -95,6 +96,7 @@ func selectRandom(array []string) string {
 	if len(array) == 0 {
 		return ""
 	}
+	rand.Seed(time.Now().UnixNano())
 	randomIndex := rand.Intn(len(array))
 	return array[randomIndex]
 }
