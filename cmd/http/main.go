@@ -8,10 +8,12 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"math/rand"
 	"net/http"
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/codes"
@@ -30,9 +32,15 @@ import (
 )
 
 func main() {
+	// For now, we use the current time as seed for each configuration. However, we might notice that
+	// it will give a deterministic sequence of pseudo-random numbers as the code shows according to
+	// its implementation https://github.com/golang/go/blob/master/src/math/rand/rng.go#L25
+	rand.Seed(time.Now().UnixNano())
+
 	// -trace-env="onebox-730", for instance, is a good name for 730 milestone, one-box rkv system
 	flag.StringVar(&config.TraceEnv, "trace-env", config.DefaultTraceEnv, "environment name displayed in tracing system")
 	jaegerServer := flag.String("jaeger-server", "http://localhost:14268", "jaeger server endpoint in form of http://host-ip:port")
+	flag.Float64Var(&config.TraceSamplingRate, "trace-sampling-rate", 1.0, "optional sampling rate")
 	flag.Parse()
 	if len(config.TraceEnv) != 0 {
 		// for now, only support http protocol of jaeger service
