@@ -5,18 +5,17 @@ import (
 	"sort"
 	"sync"
 
+	"github.com/google/btree"
 	"github.com/regionless-storage-service/pkg/config"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/codes"
-
-	"github.com/google/btree"
 )
 
 type Index interface {
 	Get(ctx context.Context, key []byte, atRev int64) (rev, created Revision, ver int64, err error)
-	RangeSince(key, end []byte, rev int64) []Revision
-	Put(key []byte, rev Revision)
-	Tombstone(key []byte, rev Revision) error
+	Put(ctx context.Context, key []byte, rev Revision) error
+	RangeSince(ctx context.Context, key, end []byte, rev int64) []Revision
+	Tombstone(ctx context.Context, key []byte, rev Revision) error
 	Equal(b Index) bool
 }
 
@@ -31,7 +30,13 @@ func NewTreeIndex() Index {
 	}
 }
 
-func (ti *treeIndex) Put(key []byte, rev Revision) {
+// Put inserts a new index entry
+// todo: return applicable errors, if any
+func (ti *treeIndex) Put(ctx context.Context, key []byte, rev Revision) error {
+	// tracing indexing component - updating index
+	_, span := otel.Tracer(config.TraceName).Start(ctx, "put index")
+	defer span.End()
+
 	keyi := &keyIndex{key: key}
 
 	ti.Lock()
@@ -40,10 +45,11 @@ func (ti *treeIndex) Put(key []byte, rev Revision) {
 	if item == nil {
 		keyi.put(rev.main, rev.sub, rev.nodes)
 		ti.tree.ReplaceOrInsert(keyi)
-		return
+		return nil
 	}
 	okeyi := item.(*keyIndex)
 	okeyi.put(rev.main, rev.sub, rev.nodes)
+	return nil
 }
 
 func (ti *treeIndex) Restore(key []byte, created, modified Revision, ver int64) {
@@ -117,7 +123,11 @@ func (ti *treeIndex) Range(key, end []byte, atRev int64) (keys [][]byte, revs []
 	return keys, revs
 }
 
-func (ti *treeIndex) Tombstone(key []byte, rev Revision) error {
+func (ti *treeIndex) Tombstone(ctx context.Context, key []byte, rev Revision) error {
+	// tracing indexing component - mark index entry as tombstone
+	_, span := otel.Tracer(config.TraceName).Start(ctx, "tombstone index")
+	defer span.End()
+
 	keyi := &keyIndex{key: key}
 
 	ti.Lock()
@@ -134,7 +144,11 @@ func (ti *treeIndex) Tombstone(key []byte, rev Revision) error {
 // RangeSince returns all Revisions from key(including) to end(excluding)
 // at or after the given rev. The returned slice is sorted in the order
 // of Revision.
-func (ti *treeIndex) RangeSince(key, end []byte, rev int64) []Revision {
+func (ti *treeIndex) RangeSince(ctx context.Context, key, end []byte, rev int64) []Revision {
+	// tracing indexing component - range query of  index
+	_, span := otel.Tracer(config.TraceName).Start(ctx, "rangesince kv")
+	defer span.End()
+
 	ti.RLock()
 	defer ti.RUnlock()
 
