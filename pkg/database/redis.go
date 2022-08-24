@@ -4,14 +4,18 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"sync"
 
 	"github.com/gomodule/redigo/redis"
 	"github.com/regionless-storage-service/pkg/config"
 )
 
-var pools map[string]*redis.Pool
+var (
+	pools  map[string]*redis.Pool
+	doOnce sync.Once
+)
 
-func InitStorageInstancePool(stores []config.KVStore) {
+func initStorageInstancePool(stores []config.KVStore) {
 	pools = make(map[string]*redis.Pool)
 	for _, conf := range stores {
 		url, pool := initPool(conf.Host, conf.Port)
@@ -45,6 +49,9 @@ type RedisDatabase struct {
 }
 
 func createRedisDatabase(databaseUrl string) (Database, error) {
+	doOnce.Do(func() {
+		initStorageInstancePool(config.RKVConfig.Stores)
+	})
 	return &RedisDatabase{client: pools[databaseUrl]}, nil
 }
 

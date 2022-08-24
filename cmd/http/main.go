@@ -18,8 +18,6 @@ import (
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/cespare/xxhash"
-	"k8s.io/klog"
-
 	"github.com/regionless-storage-service/pkg/config"
 	ca "github.com/regionless-storage-service/pkg/consistent"
 	"github.com/regionless-storage-service/pkg/database"
@@ -28,6 +26,7 @@ import (
 	"github.com/regionless-storage-service/pkg/piping"
 	"github.com/regionless-storage-service/pkg/revision"
 	"github.com/regionless-storage-service/pkg/tracer"
+	"k8s.io/klog"
 )
 
 func main() {
@@ -46,19 +45,27 @@ func main() {
 		tracer.SetupTracer(jaegerServer)
 	}
 
-	conf, err := config.NewKVConfiguration("config.json")
+	var err error
+	config.RKVConfig, err = config.NewKVConfiguration("config.json")
 	if err != nil {
 		panic(fmt.Errorf("error setting gateway agent configuration: %v", err))
 	}
-	database.InitStorageInstancePool(conf.Stores)
+	for _, c := range config.RKVConfig.Stores {
+		db, err := database.Factory(config.RKVConfig.StoreType, &c)
+		if err != nil {
+			klog.Warningf("failed to create database storage: %s", err)
+			continue
+		}
+		database.Storages[c.Name] = db
+	}
 
-	http.Handle("/kv", NewKeyValueHandler(conf))
+	http.Handle("/kv", NewKeyValueHandler(config.RKVConfig))
 	klog.Fatal(http.ListenAndServe(*url, nil))
 }
 
 type KeyValueHandler struct {
 	ch        consistent.ConsistentHashing
-	conf      config.KVConfiguration
+	conf      *config.KVConfiguration
 	indexTree index.Index
 	piping    piping.Piping
 }
@@ -78,7 +85,7 @@ type KV struct {
 	key, value string
 }
 
-func NewKeyValueHandler(conf config.KVConfiguration) *KeyValueHandler {
+func NewKeyValueHandler(conf *config.KVConfiguration) *KeyValueHandler {
 	ring := consistent.NewRendezvous(nil, rkvHash{})
 	stores := conf.GetReplications()
 	for _, store := range stores {

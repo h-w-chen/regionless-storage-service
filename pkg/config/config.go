@@ -18,6 +18,9 @@ const (
 var (
 	TraceEnv          string
 	TraceSamplingRate float64
+
+	// RKVConfig keeps rkv configuration
+	RKVConfig *KVConfiguration
 )
 
 type KVConfiguration struct {
@@ -28,16 +31,18 @@ type KVConfiguration struct {
 	ReplicaNum     int
 	Concurrent     bool
 }
+
 type KVStore struct {
-	RegionType string
-	Name       string
-	Host       string
-	Port       int
+	RegionType          string
+	Name                string
+	Host                string
+	Port                int
+	ArtificialLatencyMs int //applicable to latency decorated dummy storages
 }
 
-func NewKVConfiguration(fileName string) (KVConfiguration, error) {
+func NewKVConfiguration(fileName string) (*KVConfiguration, error) {
 	_, runningfile, _, ok := runtime.Caller(1)
-	configuration := KVConfiguration{}
+	configuration := &KVConfiguration{}
 	if !ok {
 		return configuration, fmt.Errorf("failed to open the given config file %s", fileName)
 	}
@@ -62,11 +67,11 @@ func (c *KVConfiguration) GetReplications() []string {
 	for _, store := range c.Stores {
 		switch region := store.RegionType; region {
 		case "local":
-			localStores = append(localStores, fmt.Sprintf("%s:%d", store.Host, store.Port))
+			localStores = append(localStores, store.Name)
 		case "neighbor":
-			neighborStores = append(neighborStores, fmt.Sprintf("%s:%d", store.Host, store.Port))
+			neighborStores = append(neighborStores, store.Name)
 		case "remote":
-			remoteStores = append(remoteStores, fmt.Sprintf("%s:%d", store.Host, store.Port))
+			remoteStores = append(remoteStores, store.Name)
 		}
 	}
 	n := len(localStores)

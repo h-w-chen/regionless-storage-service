@@ -3,6 +3,7 @@ package chain
 import (
 	"context"
 	"errors"
+	"fmt"
 	"math/rand"
 
 	"github.com/regionless-storage-service/pkg/config"
@@ -28,10 +29,11 @@ func NewChain(ctx context.Context, nodeType string, nodes []string) (*Chain, err
 	}
 	dbs := make([]database.Database, n)
 	for i := 0; i < n; i++ {
-		if db, err := database.Factory(nodeType, nodes[i]); err == nil {
+		db, ok := database.Storages[nodes[i]]
+		if ok {
 			dbs[i] = db
 		} else {
-			return nil, err
+			return nil, fmt.Errorf("storage not exist: %s", nodes[i])
 		}
 	}
 	return NewChainWithDatbases(ctx, dbs), nil
