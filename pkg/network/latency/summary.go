@@ -11,7 +11,7 @@ type summary struct {
 	Success *distribution
 }
 
-func makeAverage(x []int64) (out distribution) {
+func average(x []int64) (out distribution) {
 
 	if len(x) == 0 {
 		return
@@ -26,12 +26,12 @@ func makeAverage(x []int64) (out distribution) {
 }
 
 func (m *Measurements) Summary() (summary, error) {
-	all := makeAverage(m.AllSeconds())
+	all := average(m.AllSeconds())
 	var out summary
 	out.All = &all
 	insuccessCount := m.InsuccessCount()
 	if insuccessCount < 2 {
-		success := makeAverage(m.SuccessSeconds())
+		success := average(m.SuccessSeconds())
 		out.Success = &success
 	} else {
 		return out, fmt.Errorf("failed to connect for %d times", insuccessCount)
