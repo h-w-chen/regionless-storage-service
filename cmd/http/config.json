@@ -2,7 +2,7 @@
     "ConsistentHash": "rendezvous",
     "BucketSize": 10,
     "ReplicaNum": 3,
-    "StoreType": "redis",
+    "StoreType": "mem",
     "Concurrent": true,
     "Stores": [
         {
