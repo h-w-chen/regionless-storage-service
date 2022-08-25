@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"github.com/regionless-storage-service/pkg/database"
 	"io/ioutil"
 	"math/rand"
 	"net/http"
@@ -22,7 +23,6 @@ import (
 
 	"github.com/regionless-storage-service/pkg/config"
 	ca "github.com/regionless-storage-service/pkg/consistent"
-	"github.com/regionless-storage-service/pkg/database"
 	"github.com/regionless-storage-service/pkg/index"
 	"github.com/regionless-storage-service/pkg/partition/consistent"
 	"github.com/regionless-storage-service/pkg/piping"
@@ -46,19 +46,29 @@ func main() {
 		tracer.SetupTracer(jaegerServer)
 	}
 
-	conf, err := config.NewKVConfiguration("config.json")
+	var err error
+	config.RKVConfig, err = config.NewKVConfiguration("config.json")
 	if err != nil {
 		panic(fmt.Errorf("error setting gateway agent configuration: %v", err))
 	}
-	database.InitStorageInstancePool(conf.Stores)
 
-	http.Handle("/kv", NewKeyValueHandler(conf))
+	// create all backend storages
+	for _, store := range config.RKVConfig.Stores {
+		db, err := database.Factory(config.RKVConfig.StoreType, fmt.Sprintf("%s:%d", store.Host, store.Port))
+		if err != nil {
+			klog.Warningf("storage creation fails with $s: %v", store.Name, err)
+			continue
+		}
+		database.Storages[store.Name] = db
+	}
+
+	http.Handle("/kv", NewKeyValueHandler(config.RKVConfig))
 	klog.Fatal(http.ListenAndServe(*url, nil))
 }
 
 type KeyValueHandler struct {
 	ch        consistent.ConsistentHashing
-	conf      config.KVConfiguration
+	conf      *config.KVConfiguration
 	indexTree index.Index
 	piping    piping.Piping
 }
@@ -78,7 +88,7 @@ type KV struct {
 	key, value string
 }
 
-func NewKeyValueHandler(conf config.KVConfiguration) *KeyValueHandler {
+func NewKeyValueHandler(conf *config.KVConfiguration) *KeyValueHandler {
 	ring := consistent.NewRendezvous(nil, rkvHash{})
 	stores := conf.GetReplications()
 	for _, store := range stores {
