@@ -64,3 +64,26 @@ func xorshiftMult64(x uint64) uint64 {
 	x ^= x >> 27 // c
 	return x * 2685821657736338717
 }
+
+func (r *Rendezvous) LocateNodes(key []byte, count int) []Node {
+	if len(r.nodes) < count {
+		return nil
+	}
+
+	khash := r.hasher.Hash(key)
+
+	var midx int
+	var mhash = xorshiftMult64(khash ^ r.nhash[0])
+
+	for i, nhash := range r.nhash[1:] {
+		if h := xorshiftMult64(khash ^ nhash); h > mhash {
+			midx = i + 1
+			mhash = h
+		}
+	}
+	res := make([]Node, count)
+	for i := 0; i < count; i++ {
+		res[i] = r.nstr[(midx+i)%len(r.nodes)]
+	}
+	return res
+}

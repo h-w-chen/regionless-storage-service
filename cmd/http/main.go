@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"github.com/regionless-storage-service/pkg/database"
 	"io/ioutil"
 	"math/rand"
 	"net/http"
@@ -14,11 +13,12 @@ import (
 	"strings"
 	"time"
 
+	"github.com/regionless-storage-service/pkg/database"
+
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
 
-	"github.com/cespare/xxhash"
 	"k8s.io/klog"
 
 	"github.com/regionless-storage-service/pkg/config"
@@ -68,34 +68,22 @@ func main() {
 
 type KeyValueHandler struct {
 	ch        consistent.ConsistentHashing
+	hm        consistent.HashingWithAzandRemote
 	conf      *config.KVConfiguration
 	indexTree index.Index
 	piping    piping.Piping
 }
-type rkvNode string
-
-func (tn rkvNode) String() string {
-	return string(tn)
-}
-
-type rkvHash struct{}
-
-func (th rkvHash) Hash(key []byte) uint64 {
-	return xxhash.Sum64(key)
-}
-
-type KV struct {
-	key, value string
-}
 
 func NewKeyValueHandler(conf *config.KVConfiguration) *KeyValueHandler {
-	ring := consistent.NewRendezvous(nil, rkvHash{})
-	stores := conf.GetReplications()
-	for _, store := range stores {
-		ring.AddNode(rkvNode(store))
+
+	localStores, remoteStores, err := conf.GetReplications(conf.RemoteStoreLatencyThreshold)
+	if err != nil {
+		panic(fmt.Errorf("error in get replications: %v", err))
 	}
+	hm := consistent.NewHashingWithLocalAndRemote(localStores, conf.ReplicaNum.Local, remoteStores, conf.ReplicaNum.Remote)
+
 	piping := piping.NewChainPiping(conf.StoreType, ca.LINEARIZABLE, conf.Concurrent)
-	return &KeyValueHandler{ch: ring, conf: conf, indexTree: index.NewTreeIndex(), piping: piping}
+	return &KeyValueHandler{hm: hm, conf: conf, indexTree: index.NewTreeIndex(), piping: piping}
 }
 
 func (handler *KeyValueHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -227,9 +215,23 @@ func (handler *KeyValueHandler) createKV(w http.ResponseWriter, r *http.Request)
 
 	rev := revision.GetGlobalIncreasingRevision()
 	newRev := index.NewRevision(int64(rev), 0, nil)
-	node := handler.ch.LocateKey(handler.getPrimaryRevBytesWithBucket(newRev))
-	newRev.SetNodes(strings.Split(node.String(), ","))
+	lns, rns, err := handler.hm.GetLocalAndRemoteNodes(handler.getPrimaryRevBytesWithBucket(newRev))
+	if err != nil {
+		klog.Errorf("failed to get all the nodes: %v", err)
+		return "", err
+	}
 
+	nodes := []string{}
+
+	for _, ln := range lns {
+		fmt.Printf("The local string is %s\n", ln.String())
+		nodes = append(nodes, ln.String())
+	}
+	for _, rn := range rns {
+		fmt.Printf("The remote string is %s\n", rn.String())
+		nodes = append(nodes, rn.String())
+	}
+	newRev.SetNodes(nodes)
 	byteValue, err := ioutil.ReadAll(r.Body)
 
 	if err != nil {
@@ -262,7 +264,7 @@ func (handler *KeyValueHandler) createKV(w http.ResponseWriter, r *http.Request)
 		return "", err
 	}
 
-	return fmt.Sprintf("The key value pair (%s,%s) has been saved as revision %s at %s\n", payload["key"], payload["value"], strconv.FormatUint(rev, 10), node.String()), err
+	return fmt.Sprintf("The key value pair (%s,%s) has been saved as revision %s at %s\n", payload["key"], payload["value"], strconv.FormatUint(rev, 10), strings.Join(nodes, ",")), err
 }
 
 func (handler *KeyValueHandler) deleteKV(w http.ResponseWriter, r *http.Request) (string, error) {

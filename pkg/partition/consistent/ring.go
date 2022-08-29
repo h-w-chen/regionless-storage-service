@@ -80,3 +80,25 @@ func (rh *RingHashing) GetNodes() []Node {
 	}
 	return nodes
 }
+
+func (rh *RingHashing) LocateNodes(key []byte, count int) []Node {
+	if len(rh.nodes) < count {
+		return nil
+	}
+	partID := rh.FindPartitionID(key)
+	rh.mu.RLock()
+	defer rh.mu.RUnlock()
+	if partID < 0 {
+		return nil
+	}
+	res := make([]Node, count)
+	for i := 0; i < count; i++ {
+		node, ok := rh.ring[rh.sortedSet[(partID+i)%len(rh.nodes)]]
+		if !ok {
+			return nil
+		}
+		res[i] = *node
+	}
+
+	return res
+}

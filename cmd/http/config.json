@@ -1,26 +1,34 @@
 {
     "ConsistentHash": "rendezvous",
     "BucketSize": 10,
-    "ReplicaNum": 3,
+    "ReplicaNum": {
+        "Local": 2,
+        "Remote": 1
+    },
     "StoreType": "mem",
     "Concurrent": true,
+    "//" : "The threshold is to check if a store is located in a remote datacenter. It is the latency in millis seconds to set up connection", 
+    "RemoteStoreLatencyThreshold": 100,
     "Stores": [
         {
-            "RegionType": "local",
+            "Region": "us-west-1",
+            "AvailabilityZone": "us-west-1b",
             "Name": "store1",
             "Host": "127.0.0.1",
             "Port": 6379,
             "ArtificialLatencyInMs": 1
         },
         {
-            "RegionType": "neighbor",
+            "Region": "us-west-2",
+            "AvailabilityZone": "us-west-2a",
             "Name": "store3",
             "Host": "172.31.9.140",
             "Port": 6379,
             "ArtificialLatencyInMs": 40
         },
         {
-            "RegionType": "remote",
+            "Region": "us-west-2",
+            "AvailabilityZone": "us-west-2b",
             "Name": "store4",
             "Host": "172.31.12.96",
             "Port": 6380,
