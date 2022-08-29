@@ -76,7 +76,7 @@ type KeyValueHandler struct {
 
 func NewKeyValueHandler(conf *config.KVConfiguration) *KeyValueHandler {
 
-	localStores, remoteStores, err := conf.GetReplications(conf.RemoteStoreLatencyThreshold)
+	localStores, remoteStores, err := conf.GetReplications(conf.RemoteStoreLatencyThresholdInMilliSec)
 	if err != nil {
 		panic(fmt.Errorf("error in get replications: %v", err))
 	}
@@ -215,7 +215,7 @@ func (handler *KeyValueHandler) createKV(w http.ResponseWriter, r *http.Request)
 
 	rev := revision.GetGlobalIncreasingRevision()
 	newRev := index.NewRevision(int64(rev), 0, nil)
-	lns, rns, err := handler.hm.GetLocalAndRemoteNodes(handler.getPrimaryRevBytesWithBucket(newRev))
+	localNodes, remoteNodes, err := handler.hm.GetLocalAndRemoteNodes(handler.getPrimaryRevBytesWithBucket(newRev))
 	if err != nil {
 		klog.Errorf("failed to get all the nodes: %v", err)
 		return "", err
@@ -223,12 +223,10 @@ func (handler *KeyValueHandler) createKV(w http.ResponseWriter, r *http.Request)
 
 	nodes := []string{}
 
-	for _, ln := range lns {
-		fmt.Printf("The local string is %s\n", ln.String())
+	for _, ln := range localNodes {
 		nodes = append(nodes, ln.String())
 	}
-	for _, rn := range rns {
-		fmt.Printf("The remote string is %s\n", rn.String())
+	for _, rn := range remoteNodes {
 		nodes = append(nodes, rn.String())
 	}
 	newRev.SetNodes(nodes)

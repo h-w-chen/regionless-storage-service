@@ -26,13 +26,13 @@ var (
 )
 
 type KVConfiguration struct {
-	ConsistentHash              string
-	StoreType                   string
-	Stores                      []KVStore
-	BucketSize                  int64
-	ReplicaNum                  ReplicaNum
-	Concurrent                  bool
-	RemoteStoreLatencyThreshold int64
+	ConsistentHash                        string
+	StoreType                             string
+	Stores                                []KVStore
+	BucketSize                            int64
+	ReplicaNum                            ReplicaNum
+	Concurrent                            bool
+	RemoteStoreLatencyThresholdInMilliSec int64
 }
 
 type ReplicaNum struct {
@@ -87,7 +87,6 @@ func (c *KVConfiguration) GetReplications(remoteStoreLatencyThreshold int64) (ma
 			}
 		}
 	}
-	fmt.Printf("The local is %v and the remote is %v", localStores, remoteStores)
 	return localStores, remoteStores, nil
 }
 

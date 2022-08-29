@@ -2,13 +2,14 @@
     "ConsistentHash": "rendezvous",
     "BucketSize": 10,
     "ReplicaNum": {
+        "//" : "The number of local replica from the ones whose latency is fewer than RemoteStoreLatencyThresholdInMilliSec", 
         "Local": 2,
+        "//" : "The number of remote replica from the ones whose latency is more than or equals to RemoteStoreLatencyThresholdInMilliSec", 
         "Remote": 1
     },
     "StoreType": "mem",
     "Concurrent": true,
-    "//" : "The threshold is to check if a store is located in a remote datacenter. It is the latency in millis seconds to set up connection", 
-    "RemoteStoreLatencyThreshold": 100,
+    "RemoteStoreLatencyThresholdInMilliSec": 100,
     "Stores": [
         {
             "Region": "us-west-1",
