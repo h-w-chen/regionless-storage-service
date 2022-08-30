@@ -255,7 +255,7 @@ func (g *generation) walk(f func(rev Revision) bool) int {
 }
 
 func (g *generation) String() string {
-	return fmt.Sprintf("g: created[%d] ver[%d], revs %#v\n", g.created, g.ver, g.revs)
+	return fmt.Sprintf("g: created[%s] ver[%d], revs %#v\n", g.created, g.ver, g.revs)
 }
 
 func (a generation) equal(b generation) bool {
