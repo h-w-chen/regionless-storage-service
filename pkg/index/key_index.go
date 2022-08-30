@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"k8s.io/klog"
 
 	"github.com/google/btree"
 	inc "github.com/regionless-storage-service/pkg/revision"
@@ -59,14 +60,10 @@ type keyIndex struct {
 	generations []generation
 }
 
-// todo: return error instead to panic
 // put puts a Revision to the keyIndex.
 func (ki *keyIndex) put(main int64, sub int64, nodes []string) {
 	rev := Revision{main: main, sub: sub, nodes: nodes}
 
-	if !rev.GreaterThan(ki.modified) {
-		panic(fmt.Errorf("store.keyindex: put with unexpected smaller Revision [%v / %v]", rev, ki.modified))
-	}
 	if len(ki.generations) == 0 {
 		ki.generations = append(ki.generations, generation{})
 	}
@@ -74,9 +71,30 @@ func (ki *keyIndex) put(main int64, sub int64, nodes []string) {
 	if len(g.revs) == 0 { // create a new key
 		g.created = Revision{main: int64(inc.GetGlobalIncreasingRevision())}
 	}
-	g.revs = append(g.revs, rev)
-	g.ver++
-	ki.modified = rev
+
+	if !rev.GreaterThan(ki.modified) {
+		klog.Warningf("rev %v is older than the existing latest rev %v", rev, ki.modified)
+		// older than existent revs; locate its position in order
+		var i int
+		for i = len(g.revs) - 1; i >= 0; i-- {
+			if rev.GreaterThan(g.revs[i]) {
+				break
+			}
+		}
+		if i < 0 {
+			g.revs = append([]Revision{rev}, g.revs...)
+		} else {
+			tempRevs := append([]Revision{rev}, g.revs[i+1:]...)
+			g.revs = append(g.revs[:i+1], tempRevs...)
+		}
+	} else {
+		g.revs = append(g.revs, rev)
+	}
+
+	if rev.GreaterThan(ki.modified) {
+		g.ver++
+		ki.modified = rev
+	}
 }
 
 func (ki *keyIndex) restore(created, modified Revision, ver int64) {
@@ -255,7 +273,7 @@ func (g *generation) walk(f func(rev Revision) bool) int {
 }
 
 func (g *generation) String() string {
-	return fmt.Sprintf("g: created[%d] ver[%d], revs %#v\n", g.created, g.ver, g.revs)
+	return fmt.Sprintf("g: created[%s] ver[%d], revs %#v\n", g.created, g.ver, g.revs)
 }
 
 func (a generation) equal(b generation) bool {
