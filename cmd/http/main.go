@@ -56,7 +56,7 @@ func main() {
 	for _, store := range config.RKVConfig.Stores {
 		db, err := database.Factory(config.RKVConfig.StoreType, &store)
 		if err != nil {
-			klog.Warningf("storage creation fails with $s: %v", store.Name, err)
+			klog.Warningf("storage creation fails with %s: %v", store.Name, err)
 			continue
 		}
 		database.Storages[store.Name] = db
@@ -75,8 +75,7 @@ type KeyValueHandler struct {
 }
 
 func NewKeyValueHandler(conf *config.KVConfiguration) *KeyValueHandler {
-
-	localStores, remoteStores, err := conf.GetReplications(conf.RemoteStoreLatencyThresholdInMilliSec)
+	localStores, remoteStores, err := conf.GetReplications()
 	if err != nil {
 		panic(fmt.Errorf("error in get replications: %v", err))
 	}

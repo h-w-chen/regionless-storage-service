@@ -12,6 +12,7 @@ import (
 func TestWriteLINEARIZABLE(t *testing.T) {
 	cp := piping.NewChainPiping("mem", consistent.LINEARIZABLE, false)
 	rev := index.NewRevision(1, 0, []string{"0.0.0.0:0", "1.1.1.1:1", "2.2.2.2:2", "3.3.3.3:3"})
+
 	if err := cp.Write(context.TODO(), rev, "v"); err != nil {
 		t.Fatalf("fail to write with the error %v", err)
 	}

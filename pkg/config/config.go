@@ -3,7 +3,6 @@ package config
 import (
 	"encoding/json"
 	"fmt"
-	"math/rand"
 	"os"
 	"path"
 	"runtime"
@@ -27,7 +26,7 @@ var (
 
 type KVConfiguration struct {
 	ConsistentHash                        string
-	StoreType                             string
+	StoreType                             constants.StoreType
 	Stores                                []KVStore
 	BucketSize                            int64
 	ReplicaNum                            ReplicaNum
@@ -68,32 +67,31 @@ func NewKVConfiguration(fileName string) (*KVConfiguration, error) {
 }
 
 // Returns local stores grouping by AvailabilityZone and remote stores in array
-func (c *KVConfiguration) GetReplications(remoteStoreLatencyThreshold int64) (map[constants.AvailabilityZone][]string, []string, error) {
+func (c *KVConfiguration) GetReplications() (map[constants.AvailabilityZone][]string, []string, error) {
 	localStores := make(map[constants.AvailabilityZone][]string)
 	remoteStores := make([]string, 0)
 	for _, store := range c.Stores {
 		target := fmt.Sprintf("%s:%d", store.Host, store.Port)
-		if latency, err := latency.GetLatency(target, 10); err != nil {
-			return localStores, remoteStores, fmt.Errorf("failed to get latency from %s", target)
+		storeLatency := int64(0)
+		if c.StoreType == constants.DummyLatency {
+			storeLatency = int64(store.ArtificialLatencyInMs)
 		} else {
-			if latency.Summary.Success.Average/1000000 < remoteStoreLatencyThreshold {
-				if _, found := localStores[store.AvailabilityZone]; !found {
-					locals := make([]string, 0)
-					localStores[store.AvailabilityZone] = locals
-				}
-				localStores[store.AvailabilityZone] = append(localStores[store.AvailabilityZone], target)
-			} else {
-				remoteStores = append(remoteStores, target)
+			latencyResult, err := latency.GetLatency(target, 10)
+			if err != nil {
+				return localStores, remoteStores, fmt.Errorf("failed to get latency from %s", target)
 			}
+			storeLatency = latencyResult.Summary.Success.Average / 1000000
+		}
+
+		if storeLatency < c.RemoteStoreLatencyThresholdInMilliSec {
+			if _, found := localStores[store.AvailabilityZone]; !found {
+				locals := make([]string, 0)
+				localStores[store.AvailabilityZone] = locals
+			}
+			localStores[store.AvailabilityZone] = append(localStores[store.AvailabilityZone], target)
+		} else {
+			remoteStores = append(remoteStores, target)
 		}
 	}
 	return localStores, remoteStores, nil
-}
-
-func selectRandom(array []string) string {
-	if len(array) == 0 {
-		return ""
-	}
-	randomIndex := rand.Intn(len(array))
-	return array[randomIndex]
 }

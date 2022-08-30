@@ -1,130 +1,104 @@
 package config
 
 import (
-	"strings"
 	"testing"
 
 	"github.com/regionless-storage-service/pkg/config"
+	"github.com/regionless-storage-service/pkg/constants"
 )
 
 func TestLocalStores(t *testing.T) {
 	stores := []config.KVStore{
 		{
-			RegionType: "local",
-			Name:       "store1",
-			Host:       "127.0.0.1",
-			Port:       6379,
+			Region:                "us-east-1",
+			AvailabilityZone:      "us-east-1a",
+			Name:                  "us-east-11",
+			Host:                  "127.0.0.1",
+			Port:                  6379,
+			ArtificialLatencyInMs: 1,
 		},
 		{
-			RegionType: "local",
-			Name:       "store2",
-			Host:       "127.0.0.2",
-			Port:       6379,
+			Region:                "us-east-2",
+			AvailabilityZone:      "us-east-2b",
+			Name:                  "us-east-21",
+			Host:                  "172.31.9.142",
+			Port:                  6379,
+			ArtificialLatencyInMs: 100,
 		},
 		{
-			RegionType: "local",
-			Name:       "store3",
-			Host:       "127.0.0.3",
-			Port:       6379,
+			Region:                "us-east-2",
+			AvailabilityZone:      "us-east-2b",
+			Name:                  "us-east-22",
+			Host:                  "172.31.9.141",
+			Port:                  6379,
+			ArtificialLatencyInMs: 200,
 		},
 		{
-			RegionType: "neighbor",
-			Name:       "store4",
-			Host:       "172.31.9.140",
-			Port:       6379,
+			Region:                "us-east-2",
+			AvailabilityZone:      "us-east-1b",
+			Name:                  "us-east-21",
+			Host:                  "172.31.9.140",
+			Port:                  6379,
+			ArtificialLatencyInMs: 200,
 		},
 		{
-			RegionType: "remote",
-			Name:       "store5",
-			Host:       "172.31.21.96",
-			Port:       6379,
+			Region:                "us-east-1",
+			AvailabilityZone:      "us-east-1b",
+			Name:                  "us-east-13",
+			Host:                  "127.0.0.2",
+			Port:                  6379,
+			ArtificialLatencyInMs: 10,
 		},
 		{
-			RegionType: "local",
-			Name:       "store6",
-			Host:       "127.0.0.6",
-			Port:       6379,
+			Region:                "us-east-1",
+			AvailabilityZone:      "us-east-1c",
+			Name:                  "us-east-14",
+			Host:                  "127.0.0.6",
+			Port:                  6379,
+			ArtificialLatencyInMs: 90,
+		},
+		{
+			Region:                "us-east-1",
+			AvailabilityZone:      "us-east-1c",
+			Name:                  "us-east-15",
+			Host:                  "127.0.0.7",
+			Port:                  6379,
+			ArtificialLatencyInMs: 90,
+		},
+		{
+			Region:                "us-east-1",
+			AvailabilityZone:      "us-east-1b",
+			Name:                  "us-east-24",
+			Host:                  "172.31.9.144",
+			Port:                  6379,
+			ArtificialLatencyInMs: 200,
 		},
 	}
 	c := &config.KVConfiguration{
-		ReplicaNum: 3,
-		Stores:     stores,
+		ReplicaNum:                            config.ReplicaNum{Local: 3, Remote: 1},
+		StoreType:                             constants.DummyLatency,
+		Concurrent:                            false,
+		RemoteStoreLatencyThresholdInMilliSec: 100,
+		Stores:                                stores,
 	}
-	rs := c.GetReplications()
-	if len(rs) != 4 {
-		t.Fatalf("The local store number is %d", len(rs))
+	localNodes, remoteNodes, err := c.GetReplications()
+	if err != nil {
+		t.Fatalf("failed to get replications with the eror %v", err)
 	}
-	for _, r := range rs {
-		sr := strings.Split(r, ",")
-		if len(sr) != c.ReplicaNum {
-			t.Fatalf("The  replication number is %d", len(sr))
-		}
-		if sr[0] != "127.0.0.1:6379" && sr[0] != "127.0.0.2:6379" && sr[0] != "127.0.0.3:6379" && sr[0] != "127.0.0.6:6379" {
-			t.Fatalf("The local replica is %s", sr[0])
-		}
-		if sr[1] != "172.31.9.140:6379" {
-			t.Fatalf("The neighbor replica is %s", sr[0])
-		}
-		if sr[2] != "172.31.21.96:6379" {
-			t.Fatalf("The remote replica is %s", sr[0])
-		}
+	if len(localNodes) != 3 {
+		t.Fatalf("The local store number is %d", len(localNodes))
 	}
-}
-
-func TestNeighborStores(t *testing.T) {
-	stores := []config.KVStore{
-		{
-			RegionType: "local",
-			Name:       "store1",
-			Host:       "127.0.0.1",
-			Port:       6379,
-		},
-		{
-			RegionType: "local",
-			Name:       "store2",
-			Host:       "127.0.0.2",
-			Port:       6379,
-		},
-		{
-			RegionType: "neighbor",
-			Name:       "store3",
-			Host:       "172.31.9.140",
-			Port:       6379,
-		},
-		{
-			RegionType: "neighbor",
-			Name:       "store4",
-			Host:       "172.31.9.141",
-			Port:       6379,
-		},
-		{
-			RegionType: "remote",
-			Name:       "store5",
-			Host:       "172.31.21.96",
-			Port:       6379,
-		},
+	if len(remoteNodes) != 4 {
+		t.Fatalf("The remote store number is %d", len(remoteNodes))
 	}
-	c := &config.KVConfiguration{
-		ReplicaNum: 3,
-		Stores:     stores,
-	}
-	rs := c.GetReplications()
-	if len(rs) != 2 {
-		t.Fatalf("The local store number is %d", len(rs))
-	}
-	for _, r := range rs {
-		sr := strings.Split(r, ",")
-		if len(sr) != c.ReplicaNum {
-			t.Fatalf("The  replication number is %d", len(sr))
+	for az, azNodes := range localNodes {
+		if az != "us-east-1a" && az != "us-east-1b" && az != "us-east-1c" {
+			t.Fatalf("The local availiblity zone %s is not expected", az)
 		}
-		if sr[0] != "127.0.0.1:6379" && sr[0] != "127.0.0.2:6379" {
-			t.Fatalf("The local replica is %s", sr[0])
-		}
-		if sr[1] != "172.31.9.140:6379" && sr[1] != "172.31.9.141:6379" {
-			t.Fatalf("The neighbor replica is %s", sr[0])
-		}
-		if sr[2] != "172.31.21.96:6379" {
-			t.Fatalf("The remote replica is %s", sr[0])
+		for _, localNode := range azNodes {
+			if localNode[0:7] != "127.0.0" {
+				t.Fatalf("The local node %s is not expected", localNode)
+			}
 		}
 	}
 }
@@ -132,57 +106,90 @@ func TestNeighborStores(t *testing.T) {
 func TestRemoteStores(t *testing.T) {
 	stores := []config.KVStore{
 		{
-			RegionType: "local",
-			Name:       "store1",
-			Host:       "127.0.0.1",
-			Port:       6379,
+			Region:                "us-east-1",
+			AvailabilityZone:      "us-east-1a",
+			Name:                  "us-east-11",
+			Host:                  "127.0.0.1",
+			Port:                  6379,
+			ArtificialLatencyInMs: 1,
 		},
 		{
-			RegionType: "local",
-			Name:       "store2",
-			Host:       "127.0.0.2",
-			Port:       6379,
+			Region:                "us-east-2",
+			AvailabilityZone:      "us-east-2b",
+			Name:                  "us-east-21",
+			Host:                  "172.31.9.142",
+			Port:                  6379,
+			ArtificialLatencyInMs: 100,
 		},
 		{
-			RegionType: "neighbor",
-			Name:       "store3",
-			Host:       "172.31.9.140",
-			Port:       6379,
+			Region:                "us-east-2",
+			AvailabilityZone:      "us-east-2b",
+			Name:                  "us-east-22",
+			Host:                  "172.31.9.141",
+			Port:                  6379,
+			ArtificialLatencyInMs: 200,
 		},
 		{
-			RegionType: "remote",
-			Name:       "store4",
-			Host:       "172.31.21.96",
-			Port:       6379,
+			Region:                "us-east-2",
+			AvailabilityZone:      "us-east-1b",
+			Name:                  "us-east-21",
+			Host:                  "172.31.9.140",
+			Port:                  6379,
+			ArtificialLatencyInMs: 200,
 		},
 		{
-			RegionType: "remote",
-			Name:       "store5",
-			Host:       "172.31.21.97",
-			Port:       6379,
+			Region:                "us-east-1",
+			AvailabilityZone:      "us-east-1b",
+			Name:                  "us-east-13",
+			Host:                  "127.0.0.2",
+			Port:                  6379,
+			ArtificialLatencyInMs: 10,
+		},
+		{
+			Region:                "us-east-1",
+			AvailabilityZone:      "us-east-1c",
+			Name:                  "us-east-14",
+			Host:                  "127.0.0.6",
+			Port:                  6379,
+			ArtificialLatencyInMs: 90,
+		},
+		{
+			Region:                "us-east-1",
+			AvailabilityZone:      "us-east-1c",
+			Name:                  "us-east-15",
+			Host:                  "127.0.0.7",
+			Port:                  6379,
+			ArtificialLatencyInMs: 90,
+		},
+		{
+			Region:                "us-east-1",
+			AvailabilityZone:      "us-east-1b",
+			Name:                  "us-east-24",
+			Host:                  "172.31.9.144",
+			Port:                  6379,
+			ArtificialLatencyInMs: 200,
 		},
 	}
 	c := &config.KVConfiguration{
-		ReplicaNum: 3,
-		Stores:     stores,
+		ReplicaNum:                            config.ReplicaNum{Local: 3, Remote: 1},
+		StoreType:                             constants.DummyLatency,
+		Concurrent:                            false,
+		RemoteStoreLatencyThresholdInMilliSec: 100,
+		Stores:                                stores,
 	}
-	rs := c.GetReplications()
-	if len(rs) != 2 {
-		t.Fatalf("The local store number is %d", len(rs))
+	localNodes, remoteNodes, err := c.GetReplications()
+	if err != nil {
+		t.Fatalf("failed to get replications with the eror %v", err)
 	}
-	for _, r := range rs {
-		sr := strings.Split(r, ",")
-		if len(sr) != c.ReplicaNum {
-			t.Fatalf("The  replication number is %d", len(sr))
-		}
-		if sr[0] != "127.0.0.1:6379" && sr[0] != "127.0.0.2:6379" {
-			t.Fatalf("The local replica is %s", sr[0])
-		}
-		if sr[1] != "172.31.9.140:6379" {
-			t.Fatalf("The neighbor replica is %s", sr[0])
-		}
-		if sr[2] != "172.31.21.96:6379" && sr[2] != "172.31.21.97:6379" {
-			t.Fatalf("The remote replica is %s", sr[0])
+	if len(localNodes) != 3 {
+		t.Fatalf("The local store number is %d", len(localNodes))
+	}
+	if len(remoteNodes) != 4 {
+		t.Fatalf("The remote store number is %d", len(remoteNodes))
+	}
+	for _, remoteNode := range remoteNodes {
+		if remoteNode[0:11] != "172.31.9.14" {
+			t.Fatalf("The remote node %s is not expected", remoteNode)
 		}
 	}
 }

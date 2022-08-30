@@ -7,18 +7,19 @@ import (
 	"github.com/regionless-storage-service/pkg/config"
 	"github.com/regionless-storage-service/pkg/consistent"
 	"github.com/regionless-storage-service/pkg/consistent/chain"
+	"github.com/regionless-storage-service/pkg/constants"
 	"github.com/regionless-storage-service/pkg/index"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/codes"
 )
 
 type ChainPiping struct {
-	databaseType string
+	databaseType constants.StoreType
 	consistency  consistent.CONSISTENCY
 	concurrent   bool
 }
 
-func NewChainPiping(databaseType string, consistency consistent.CONSISTENCY, concurrent bool) *ChainPiping {
+func NewChainPiping(databaseType constants.StoreType, consistency consistent.CONSISTENCY, concurrent bool) *ChainPiping {
 	return &ChainPiping{databaseType: databaseType, consistency: consistency, concurrent: concurrent}
 }
 

@@ -25,3 +25,5 @@ jobs:
         go get github.com/google/btree
     - name: Run build
       run: make build
+    - name: Run unit tests
+      run: go test ./...
