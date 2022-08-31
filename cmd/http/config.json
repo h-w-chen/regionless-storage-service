@@ -1,26 +1,35 @@
 {
     "ConsistentHash": "rendezvous",
     "BucketSize": 10,
-    "ReplicaNum": 3,
+    "ReplicaNum": {
+        "//" : "The number of local replica from the ones whose latency is fewer than RemoteStoreLatencyThresholdInMilliSec", 
+        "Local": 2,
+        "//" : "The number of remote replica from the ones whose latency is more than or equals to RemoteStoreLatencyThresholdInMilliSec", 
+        "Remote": 1
+    },
     "StoreType": "mem",
     "Concurrent": true,
+    "RemoteStoreLatencyThresholdInMilliSec": 100,
     "Stores": [
         {
-            "RegionType": "local",
+            "Region": "us-west-1",
+            "AvailabilityZone": "us-west-1b",
             "Name": "store1",
             "Host": "127.0.0.1",
             "Port": 6379,
             "ArtificialLatencyInMs": 1
         },
         {
-            "RegionType": "neighbor",
+            "Region": "us-west-2",
+            "AvailabilityZone": "us-west-2a",
             "Name": "store3",
             "Host": "172.31.9.140",
             "Port": 6379,
             "ArtificialLatencyInMs": 40
         },
         {
-            "RegionType": "remote",
+            "Region": "us-west-2",
+            "AvailabilityZone": "us-west-2b",
             "Name": "store4",
             "Host": "172.31.12.96",
             "Port": 6380,

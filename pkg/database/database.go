@@ -2,8 +2,10 @@ package database
 
 import (
 	"fmt"
-	"github.com/regionless-storage-service/pkg/config"
 	"time"
+
+	"github.com/regionless-storage-service/pkg/config"
+	"github.com/regionless-storage-service/pkg/constants"
 )
 
 var (
@@ -18,17 +20,17 @@ type Database interface {
 	Close() error
 }
 
-func Factory(databaseType string, store *config.KVStore) (Database, error) {
+func Factory(databaseType constants.StoreType, store *config.KVStore) (Database, error) {
 	switch databaseType {
-	case "redis":
+	case constants.Redis:
 		databaseUrl := fmt.Sprintf("%s:%d", store.Host, store.Port)
 		return createRedisDatabase(databaseUrl)
-	case "mem":
+	case constants.Memory:
 		databaseUrl := fmt.Sprintf("%s:%d", store.Host, store.Port)
 		return NewMemDatabase(databaseUrl), nil
-	case "dummy+latency": // simulator database backend suitable for internal perf load test
+	case constants.DummyLatency: // simulator database backend suitable for internal perf load test
 		return newLatencyDummyDatabase(time.Duration(store.ArtificialLatencyInMs) * time.Millisecond), nil
 	default:
-		return nil, &DatabaseNotImplementedError{databaseType}
+		return nil, &DatabaseNotImplementedError{databaseType.Name()}
 	}
 }

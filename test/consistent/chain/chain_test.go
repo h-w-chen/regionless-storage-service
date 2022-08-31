@@ -68,7 +68,7 @@ func TestChainWriteSEQUENTIAL(t *testing.T) {
 	if _, err := chain.GetTail().Read(context.TODO(), "k1"); err == nil {
 		t.Fatalf("tail failed is supposed not to find the key")
 	}
-	time.Sleep(5 * time.Second)
+	time.Sleep(10 * time.Second)
 	if v1, err := chain.GetTail().Read(context.TODO(), "k1"); err != nil {
 		t.Fatalf("tail failed to read  with error %v", err)
 	} else if v1 != "v1" {

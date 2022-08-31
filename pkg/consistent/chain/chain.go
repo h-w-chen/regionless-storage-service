@@ -8,6 +8,7 @@ import (
 
 	"github.com/regionless-storage-service/pkg/config"
 	"github.com/regionless-storage-service/pkg/consistent"
+	"github.com/regionless-storage-service/pkg/constants"
 	"github.com/regionless-storage-service/pkg/database"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/codes"
@@ -19,7 +20,7 @@ type Chain struct {
 	ctx        context.Context
 }
 
-func NewChain(ctx context.Context, nodeType string, nodes []string) (*Chain, error) {
+func NewChain(ctx context.Context, nodeType constants.StoreType, nodes []string) (*Chain, error) {
 	n := len(nodes)
 	if n == 0 {
 		return nil, errors.New("the number of nodes is 0")
@@ -28,6 +29,12 @@ func NewChain(ctx context.Context, nodeType string, nodes []string) (*Chain, err
 		return nil, errors.New("the number of nodes is 1, which means there is no replica")
 	}
 	dbs := make([]database.Database, n)
+	if nodeType == constants.Memory {
+		for i := 0; i < n; i++ {
+			dbs[i] = database.NewMemDatabase(nodes[i])
+		}
+		return NewChainWithDatbases(ctx, dbs), nil
+	}
 	for i := 0; i < n; i++ {
 		db, ok := database.Storages[nodes[i]]
 		if ok {

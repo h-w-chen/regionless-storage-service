@@ -3,11 +3,12 @@ package config
 import (
 	"encoding/json"
 	"fmt"
-	"math/rand"
 	"os"
 	"path"
 	"runtime"
-	"strings"
+
+	"github.com/regionless-storage-service/pkg/constants"
+	"github.com/regionless-storage-service/pkg/network/latency"
 )
 
 const (
@@ -24,15 +25,23 @@ var (
 )
 
 type KVConfiguration struct {
-	ConsistentHash string
-	StoreType      string
-	Stores         []KVStore
-	BucketSize     int64
-	ReplicaNum     int
-	Concurrent     bool
+	ConsistentHash                        string
+	StoreType                             constants.StoreType
+	Stores                                []KVStore
+	BucketSize                            int64
+	ReplicaNum                            ReplicaNum
+	Concurrent                            bool
+	RemoteStoreLatencyThresholdInMilliSec int64
 }
+
+type ReplicaNum struct {
+	Local  int
+	Remote int
+}
+
 type KVStore struct {
-	RegionType            string
+	Region                constants.Region
+	AvailabilityZone      constants.AvailabilityZone
 	Name                  string
 	Host                  string
 	Port                  int
@@ -57,49 +66,32 @@ func NewKVConfiguration(fileName string) (*KVConfiguration, error) {
 	return configuration, err
 }
 
-func (c *KVConfiguration) GetReplications() []string {
-	var localStores []string
-	var neighborStores []string
-	var remoteStores []string
-	// Please refer to https://user-images.githubusercontent.com/252020/184443299-799f1ed4-493a-4ea2-a9ed-72e15a2737af.png
-	// for the following store categories.
+// Returns local stores grouping by AvailabilityZone and remote stores in array
+func (c *KVConfiguration) GetReplications() (map[constants.AvailabilityZone][]string, []string, error) {
+	localStores := make(map[constants.AvailabilityZone][]string)
+	remoteStores := make([]string, 0)
 	for _, store := range c.Stores {
-		switch region := store.RegionType; region {
-		case "local":
-			localStores = append(localStores, store.Name)
-		case "neighbor":
-			neighborStores = append(neighborStores, store.Name)
-		case "remote":
-			remoteStores = append(remoteStores, store.Name)
+		target := fmt.Sprintf("%s:%d", store.Host, store.Port)
+		storeLatency := int64(0)
+		if c.StoreType == constants.DummyLatency {
+			storeLatency = int64(store.ArtificialLatencyInMs)
+		} else {
+			latencyResult, err := latency.GetLatency(target, 10)
+			if err != nil {
+				return localStores, remoteStores, fmt.Errorf("failed to get latency from %s", target)
+			}
+			storeLatency = latencyResult.Summary.Success.Average / 1000000
 		}
-	}
-	n := len(localStores)
-	replications := make([]string, n)
-	for idx := 0; idx < n; idx++ {
-		total := c.ReplicaNum
-		replics := make([]string, total)
-		total--
-		if remote := selectRandom(remoteStores); remote != "" {
-			replics[total] = remote
-			total--
-		}
-		if neighbor := selectRandom(neighborStores); neighbor != "" {
-			replics[total] = neighbor
-			total--
-		}
-		for i := 0; i < total+1; i++ {
-			replics[total] = localStores[(idx+i)%n]
-			total--
-		}
-		replications[idx] = strings.Join(replics, ",")
-	}
-	return replications
-}
 
-func selectRandom(array []string) string {
-	if len(array) == 0 {
-		return ""
+		if storeLatency < c.RemoteStoreLatencyThresholdInMilliSec {
+			if _, found := localStores[store.AvailabilityZone]; !found {
+				locals := make([]string, 0)
+				localStores[store.AvailabilityZone] = locals
+			}
+			localStores[store.AvailabilityZone] = append(localStores[store.AvailabilityZone], target)
+		} else {
+			remoteStores = append(remoteStores, target)
+		}
 	}
-	randomIndex := rand.Intn(len(array))
-	return array[randomIndex]
+	return localStores, remoteStores, nil
 }
