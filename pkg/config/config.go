@@ -6,9 +6,11 @@ import (
 	"os"
 	"path"
 	"runtime"
+	"time"
 
 	"github.com/regionless-storage-service/pkg/constants"
 	"github.com/regionless-storage-service/pkg/network/latency"
+	"github.com/regionless-storage-service/pkg/partition/consistent"
 )
 
 const (
@@ -25,18 +27,16 @@ var (
 )
 
 type KVConfiguration struct {
-	ConsistentHash                        string
+	ConsistentHash                        constants.ConsistentHashingType
 	StoreType                             constants.StoreType
+	HashingManagerType                    constants.HashingManagerType
+	PipingType                            constants.PipingType
 	Stores                                []KVStore
 	BucketSize                            int64
-	ReplicaNum                            ReplicaNum
 	Concurrent                            bool
 	RemoteStoreLatencyThresholdInMilliSec int64
-}
-
-type ReplicaNum struct {
-	Local  int
-	Remote int
+	LocalReplicaNum                       int
+	RemoteReplicaNum                      int
 }
 
 type KVStore struct {
@@ -66,11 +66,11 @@ func NewKVConfiguration(fileName string) (*KVConfiguration, error) {
 	return configuration, err
 }
 
-// Returns local stores grouping by AvailabilityZone and remote stores in array
+// Please verify that any new datastore type does not break the codes here. Please do run real datastores locally before check-in
 // returned items identifing backend stores by name, NOT by hostname:port - backend may be other than redis type
-func (c *KVConfiguration) GetReplications() (map[constants.AvailabilityZone][]string, []string, error) {
-	localStores := make(map[constants.AvailabilityZone][]string)
-	remoteStores := make([]string, 0)
+func (c *KVConfiguration) GetReplications() (map[constants.AvailabilityZone][]consistent.RkvNode, []consistent.RkvNode, error) {
+	localStores := make(map[constants.AvailabilityZone][]consistent.RkvNode)
+	remoteStores := make([]consistent.RkvNode, 0)
 	for _, store := range c.Stores {
 		target := fmt.Sprintf("%s:%d", store.Host, store.Port)
 		storeLatency := int64(0)
@@ -84,15 +84,20 @@ func (c *KVConfiguration) GetReplications() (map[constants.AvailabilityZone][]st
 			storeLatency = latencyResult.Summary.Success.Average / 1000000
 		}
 
+		if c.StoreType != constants.Redis {
+			target = store.Name
+		}
 		if storeLatency < c.RemoteStoreLatencyThresholdInMilliSec {
 			if _, found := localStores[store.AvailabilityZone]; !found {
-				locals := make([]string, 0)
+				locals := make([]consistent.RkvNode, 0)
 				localStores[store.AvailabilityZone] = locals
 			}
-			localStores[store.AvailabilityZone] = append(localStores[store.AvailabilityZone], store.Name)
+			localStores[store.AvailabilityZone] = append(localStores[store.AvailabilityZone],
+				consistent.RkvNode{Name: target, Latency: time.Duration(storeLatency * int64(time.Millisecond)), IsRemote: false})
 		} else {
-			remoteStores = append(remoteStores, store.Name)
+			remoteStores = append(remoteStores, consistent.RkvNode{Name: target, Latency: time.Duration(storeLatency * int64(time.Millisecond)), IsRemote: true})
 		}
 	}
+	fmt.Printf("The local stores are %v and the remote are %v", localStores, remoteStores)
 	return localStores, remoteStores, nil
 }

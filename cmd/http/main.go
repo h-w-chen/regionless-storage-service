@@ -13,6 +13,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/regionless-storage-service/pkg/constants"
 	"github.com/regionless-storage-service/pkg/database"
 
 	"go.opentelemetry.io/otel"
@@ -67,8 +68,7 @@ func main() {
 }
 
 type KeyValueHandler struct {
-	ch        consistent.ConsistentHashing
-	hm        consistent.HashingWithAzandRemote
+	hm        consistent.HashingManager
 	conf      *config.KVConfiguration
 	indexTree index.Index
 	piping    piping.Piping
@@ -79,10 +79,30 @@ func NewKeyValueHandler(conf *config.KVConfiguration) *KeyValueHandler {
 	if err != nil {
 		panic(fmt.Errorf("error in get replications: %v", err))
 	}
-	hm := consistent.NewHashingWithLocalAndRemote(localStores, conf.ReplicaNum.Local, remoteStores, conf.ReplicaNum.Remote)
+	var hm consistent.HashingManager
+	var pp piping.Piping
+	switch conf.HashingManagerType {
+	case constants.Sync:
+		stores := make([]consistent.RkvNode, 0)
+		for _, localStore := range localStores {
+			stores = append(stores, localStore...)
+		}
+		hm = consistent.NewSyncHashingManager(conf.ConsistentHash, stores, conf.LocalReplicaNum)
+	case constants.SyncAsync:
+		hm = consistent.NewSyncAsyncHashingManager(conf.ConsistentHash, localStores, conf.LocalReplicaNum, remoteStores, conf.RemoteReplicaNum)
+	default:
+		hm = consistent.NewSyncAsyncHashingManager(conf.ConsistentHash, localStores, conf.LocalReplicaNum, remoteStores, conf.RemoteReplicaNum)
+	}
+	switch conf.PipingType {
+	case constants.Chain:
+		pp = piping.NewChainPiping(conf.StoreType, ca.LINEARIZABLE, conf.Concurrent)
+	case constants.LocalSyncRemoteAsync:
+		pp = piping.NewSyncAsyncPiping(conf.StoreType)
+	default:
+		pp = piping.NewSyncAsyncPiping(conf.StoreType)
+	}
 
-	piping := piping.NewChainPiping(conf.StoreType, ca.LINEARIZABLE, conf.Concurrent)
-	return &KeyValueHandler{hm: hm, conf: conf, indexTree: index.NewTreeIndex(), piping: piping}
+	return &KeyValueHandler{hm: hm, conf: conf, indexTree: index.NewTreeIndex(), piping: pp}
 }
 
 func (handler *KeyValueHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -214,19 +234,10 @@ func (handler *KeyValueHandler) createKV(w http.ResponseWriter, r *http.Request)
 
 	rev := revision.GetGlobalIncreasingRevision()
 	newRev := index.NewRevision(int64(rev), 0, nil)
-	localNodes, remoteNodes, err := handler.hm.GetLocalAndRemoteNodes(handler.getPrimaryRevBytesWithBucket(newRev))
+	primRev := handler.getPrimaryRevBytesWithBucket(newRev)
+	nodes, err := handler.hm.GetNodes(primRev)
 	if err != nil {
-		klog.Errorf("failed to get all the nodes: %v", err)
 		return "", err
-	}
-
-	nodes := []string{}
-
-	for _, ln := range localNodes {
-		nodes = append(nodes, ln.String())
-	}
-	for _, rn := range remoteNodes {
-		nodes = append(nodes, rn.String())
 	}
 	newRev.SetNodes(nodes)
 	byteValue, err := ioutil.ReadAll(r.Body)
@@ -262,7 +273,7 @@ func (handler *KeyValueHandler) createKV(w http.ResponseWriter, r *http.Request)
 		return "", err
 	}
 
-	return fmt.Sprintf("The key value pair (%s,%s) has been saved as revision %s at %s\n", payload["key"], payload["value"], strconv.FormatUint(rev, 10), strings.Join(nodes, ",")), err
+	return fmt.Sprintf("The key value pair (%s,%s) has been saved as revision %s at %s\n", payload["key"], payload["value"], strconv.FormatUint(rev, 10), strings.Join(newRev.GetNodes(), ",")), err
 }
 
 func (handler *KeyValueHandler) deleteKV(w http.ResponseWriter, r *http.Request) (string, error) {

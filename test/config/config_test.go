@@ -75,7 +75,8 @@ func TestLocalStores(t *testing.T) {
 		},
 	}
 	c := &config.KVConfiguration{
-		ReplicaNum:                            config.ReplicaNum{Local: 3, Remote: 1},
+		LocalReplicaNum:                       3,
+		RemoteReplicaNum:                      1,
 		StoreType:                             constants.DummyLatency,
 		Concurrent:                            false,
 		RemoteStoreLatencyThresholdInMilliSec: 100,
@@ -96,8 +97,8 @@ func TestLocalStores(t *testing.T) {
 			t.Fatalf("The local availiblity zone %s is not expected", az)
 		}
 		for _, localNode := range azNodes {
-			if localNode[0:9] != "us-east-1" {
-				t.Fatalf("The local node %s is not expected", localNode)
+			if localNode.Name[0:9] != "us-east-1" {
+				t.Fatalf("The local node %s is not expected", localNode.Name)
 			}
 		}
 	}
@@ -171,7 +172,8 @@ func TestRemoteStores(t *testing.T) {
 		},
 	}
 	c := &config.KVConfiguration{
-		ReplicaNum:                            config.ReplicaNum{Local: 3, Remote: 1},
+		LocalReplicaNum:                       3,
+		RemoteReplicaNum:                      1,
 		StoreType:                             constants.DummyLatency,
 		Concurrent:                            false,
 		RemoteStoreLatencyThresholdInMilliSec: 100,
@@ -188,7 +190,7 @@ func TestRemoteStores(t *testing.T) {
 		t.Fatalf("The remote store number is %d", len(remoteNodes))
 	}
 	for _, remoteNode := range remoteNodes {
-		if remoteNode[0:9] != "us-east-2" {
+		if remoteNode.Name[0:9] != "us-east-2" {
 			t.Fatalf("The remote node %s is not expected", remoteNode)
 		}
 	}
