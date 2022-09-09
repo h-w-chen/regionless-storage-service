@@ -48,13 +48,11 @@ source common.sh
 print_usage() {
     echo "Usage:"
     echo "  cd scripts"
-    echo "  export KEY_NAME=<your ec2 key name>"
-    echo "  export KEY_FILE=<path-to-ec2-key-file>"
     echo "  export NAME_TAG=<name_tag to identify your resources>"
     echo "  and then run ./setup-test-lab.sh [optional: si definition file name, yes, name without path, 'scripts/si_def.json' if not provided"
 }
 
-if [ -z ${NAME_TAG:=} ] || [ -z ${KEY_NAME:=} ] || [ -z ${KEY_FILE:=} ]
+if [ -z ${NAME_TAG:=} ]
 then
     echo "=^..^= One or more env variable need to be defined"
     print_usage
@@ -62,11 +60,9 @@ then
       exit 1
 fi
 
-cat splash.art 
+cat splash.art
 
 ## this is for AWS env only
-## to set up singular region test lab of rkv perf
-
 ## get the default values
 . ./test-lab.val
 
@@ -74,10 +70,14 @@ if [ $# -eq 0 ]
 then
     echo "no argument given. using default storage config file $SI_DEF_FILE"
 else
-    SI_DEF_FILE="../$1"
+    SI_DEF_FILE="$(readlink -f $1)"
 fi
 
 echo "using $SI_DEF_FILE as the storage instance definition"
+
+# get KEY_NAME KEY_FILE from $SI_DEF_FILE
+export KEY_NAME=$(cat $SI_DEF_FILE | jq -r '.RegionConfigs[] | select(.Region=="us-west-2") | .KeyName')
+export KEY_FILE=$(cat $SI_DEF_FILE | jq -r '.RegionConfigs[] | select(.Region=="us-west-2") | .FileName')
 
 #
 # start redis vm instances and rkv server
