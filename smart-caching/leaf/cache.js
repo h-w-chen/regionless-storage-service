@@ -1,11 +1,18 @@
 const { EventEmitter } = require("events");
 
 const withTimeout = (millis, promise) => {
-    const timeout = new Promise((resolve, reject) =>
-    setTimeout(
-        () => reject(new Error(`timed out; not in cache yet`)), 
-        millis));
-    return Promise.race([promise, timeout]);
+    let timer = null;
+    const timeout = new Promise((resolve, reject) => {
+        timer = setTimeout(
+                () => reject(new Error(`timed out; not in cache yet`)),
+                millis);
+        return timer;
+    });
+    return Promise.race([promise, timeout])
+        .then((value) => {
+            clearTimeout(timer);
+            return value;
+        });
 };
 
 const genCacheKey = (key, rev) => `${key}:${rev}`;
