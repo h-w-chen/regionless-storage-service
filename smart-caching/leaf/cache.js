@@ -11,8 +11,7 @@ fetchKeyOfRev = async (key, rev) => {
 
     // todo: wait for content message populating cache
     // for now simply reject it
-    //throw new Error('not in cache yet');
-    return 'hello';
-}
+    throw new Error('not in cache yet');
+};
 
 module.exports = { fetchKeyOfRev, localCache, genCacheKey };
