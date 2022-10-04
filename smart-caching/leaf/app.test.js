@@ -1,14 +1,9 @@
-const app = require('./app');
+const {app, cache} = require('./app');
 const supertest = require("supertest");
-const {localCache, genCacheKey} = require('./cache');
 
 beforeAll(() => {
     // test data
-    localCache.set(genCacheKey('k', 99), 'value of k-99');
-});
-
-afterAll(() => {
-    localCache.clear();
+    cache.setKeyOfRev('k', 99, 'value of k-99');
 });
 
 it('GET /kv?key=k&rev=99 cache hit', async () => {

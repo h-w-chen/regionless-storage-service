@@ -1,17 +1,24 @@
-const localCache = new Map();
 const genCacheKey = (key, rev) => `${key}:${rev}`;
 
-
-fetchKeyOfRev = async (key, rev) => {
-    let combinedKey = genCacheKey(key, rev);
-    let value = localCache.get(combinedKey);
-    if (value) {
-        return value;
+const LocalCache = class {
+    constructor() {
+        this.kvstore = new Map();
     }
 
-    // todo: wait for content message populating cache
-    // for now simply reject it
-    throw new Error('not in cache yet');
+    setKeyOfRev(key, rev, value) {
+        this.kvstore.set(genCacheKey(key,rev), value);        
+    }
+
+    async fetchKeyOfRev(key, rev) {
+        let value = this.kvstore.get(genCacheKey(key, rev));
+        if (value) {
+            return value;
+        }
+    
+        // todo: wait for content message populating cache
+        // for now simply reject it
+        throw new Error('not in cache yet');
+    }
 };
 
-module.exports = { fetchKeyOfRev, localCache, genCacheKey };
+module.exports = LocalCache;

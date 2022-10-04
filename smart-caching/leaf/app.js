@@ -1,6 +1,8 @@
 const express = require('express');
 const app = express();
-const {fetchKeyOfRev} = require('./cache');
+
+const Cache = require('./cache');
+const cache = new Cache();
 
 // R: kv?key=k&rev=r
 app.get('/kv', async (req, resp) => {
@@ -12,11 +14,11 @@ app.get('/kv', async (req, resp) => {
     }
 
     try{
-        result = await fetchKeyOfRev(key, rev);
+        result = await cache.fetchKeyOfRev(key, rev);
         resp.end(result);
     } catch (e) {
         resp.status(500).end(`${e.message}`);
     }
 });
 
-module.exports = app;
+module.exports = {app, cache};

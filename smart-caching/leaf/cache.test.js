@@ -1,21 +1,19 @@
-const {localCache, fetchKeyOfRev, genCacheKey } = require('./cache');
+const Cache = require('./cache');
+const cacheTest = new Cache();
 
 beforeAll(() => {
-    localCache.set(genCacheKey("a", 1), 'a-1 val');
-});
-
-afterAll(() => {
-    localCache.clear();
+    // test data
+    cacheTest.setKeyOfRev('a', 1, 'a-1 val');
 });
 
 it('cache hit', async ()=>{
-    let v = await fetchKeyOfRev('a', 1);
+    let v = await cacheTest.fetchKeyOfRev('a', 1);
     expect(v).toBe('a-1 val');
 });
 
 it('cache miss', async ()=>{
     try{
-        let v = await fetchKeyOfRev('b', 1);
+        let v = await cacheTest.fetchKeyOfRev('b', 1);
     } catch (e) {
         expect(e).toEqual(Error('not in cache yet'));
     }
