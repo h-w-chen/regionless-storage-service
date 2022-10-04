@@ -1,6 +1,6 @@
 const { EventEmitter } = require("events");
 
-const withTimeout = (millis, promise) => {
+const withTimeout = async (millis, promise) => {
     let timer = null;
     const timeout = new Promise((resolve, reject) => {
         timer = setTimeout(
@@ -8,11 +8,9 @@ const withTimeout = (millis, promise) => {
                 millis);
         return timer;
     });
-    return Promise.race([promise, timeout])
-        .then((value) => {
-            clearTimeout(timer);
-            return value;
-        });
+    value = await Promise.race([promise, timeout]);
+    clearTimeout(timer);
+    return value;
 };
 
 const genCacheKey = (key, rev) => `${key}:${rev}`;
