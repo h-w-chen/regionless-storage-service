@@ -1,7 +1,12 @@
 const {localCache, fetchKeyOfRev, genCacheKey } = require('./cache');
 
-// test data
-localCache.set(genCacheKey("a", 1), 'a-1 val');
+beforeAll(() => {
+    localCache.set(genCacheKey("a", 1), 'a-1 val');
+});
+
+afterAll(() => {
+    localCache.clear();
+});
 
 it('cache hit', async ()=>{
     let v = await fetchKeyOfRev('a', 1);
