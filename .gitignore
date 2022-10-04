@@ -1,5 +1,6 @@
 # IDE specific files
 .idea
+.vscode
 
 # Optional npm cache directory and files
 .npm
