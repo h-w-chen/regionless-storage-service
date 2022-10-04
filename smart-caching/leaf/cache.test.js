@@ -18,3 +18,12 @@ it('cache miss', async ()=>{
         expect(e).toEqual(Error('timed out; not in cache yet'));
     }
 });
+
+it('cache missed initially and soon populated', async ()=>{
+    setTimeout(() => {
+        cacheTest.emitter.emit('c:3');
+    }, 1000 );
+    let v = await cacheTest.fetchKeyOfRev('c', 3);
+    //expect(v).toBe('val of c-3');
+    expect(v).toBeUndefined();
+});
