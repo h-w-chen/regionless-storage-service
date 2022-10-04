@@ -15,6 +15,6 @@ it('cache miss', async ()=>{
     try{
         let v = await cacheTest.fetchKeyOfRev('b', 1);
     } catch (e) {
-        expect(e).toEqual(Error('not in cache yet'));
+        expect(e).toEqual(Error('timed out; not in cache yet'));
     }
 });
