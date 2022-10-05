@@ -4,6 +4,11 @@ const supertest = require("supertest");
 beforeAll(() => {
     // test data
     cache.setKeyOfRev('k', 99, 'value of k-99');
+
+    const ctrlFake = {};
+    const ReuestInterest = jest.fn();
+    ctrlFake.ReuestInterest = ReuestInterest.bind(ctrlFake);
+    cache.setController(ctrlFake);
 });
 
 it('GET /kv?key=k&rev=99 cache hit', async () => {

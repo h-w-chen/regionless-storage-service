@@ -4,6 +4,11 @@ const cacheTest = new Cache();
 beforeAll(() => {
     // test data
     cacheTest.setKeyOfRev('a', 1, 'a-1 val');
+
+    const ctrlFake = {};
+    const ReuestInterest = jest.fn().mockReturnValue('dummy-id');
+    ctrlFake.ReuestInterest = ReuestInterest.bind(ctrlFake);
+    cacheTest.setController(ctrlFake);
 });
 
 it('cache hit', async ()=>{
@@ -21,7 +26,7 @@ it('cache miss', async ()=>{
 
 it('cache missed initially and soon populated', async ()=>{
     setTimeout(() => {
-        cacheTest.emitter.emit('c:3');
+        cacheTest.emitter.emit('dummy-id');
     }, 1000 );
     let v = await cacheTest.fetchKeyOfRev('c', 3);
     expect(v).toBe('lazy populated; to impl');

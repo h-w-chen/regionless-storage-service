@@ -1,5 +1,5 @@
 const supertest = require('supertest');
-const icnService = require('./service');
+const {icnService} = require('./service');
 const {cache} = require('../leaf/app');
 
 const Content = require('./content');

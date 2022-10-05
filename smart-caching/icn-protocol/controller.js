@@ -13,6 +13,7 @@ const Controller = class {
     ReuestInterest(interest, sessionID) {
         this.irt.enlist(interest, sessionID);
         // todo: send out IM if not in PIT, in background?
+        return sessionID;
     }
 
     OnContent(content) {

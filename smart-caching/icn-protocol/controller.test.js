@@ -8,8 +8,9 @@ beforeAll(() => {
 });
 
 it('Controller processes interest request', ()=>{
-    ctrlTest.ReuestInterest('foo', '12345');
-    expect([...ctrlTest.irt.list('foo')]).toEqual(['12345']);
+    id = ctrlTest.ReuestInterest('foo', '12345');
+    expect(id).toBe('12345');
+    expect([...ctrlTest.irt.list('foo')]).toEqual([id]);
     // todo: ensure new IM sent out too
 });
 

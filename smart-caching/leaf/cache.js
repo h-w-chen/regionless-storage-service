@@ -1,4 +1,5 @@
 const { EventEmitter } = require("events");
+const uuid = require("uuid");
 
 const withTimeout = async (millis, promise) => {
     let timer = null;
@@ -19,6 +20,11 @@ const LocalCache = class {
     constructor() {
         this.kvstore = new Map();
         this.emitter = new EventEmitter();
+        this.controller = null;
+    }
+
+    setController(controller) {
+        this.controller = controller;
     }
 
     setKeyOfRev(key, rev, value) {
@@ -37,14 +43,16 @@ const LocalCache = class {
         }
     
         // request ICN controlelr with interest
-        // todo: impl
+        const sessionID = uuid.v4();
+        const interestKey = `${key}:${rev}`;
+        let regId = this.controller.ReuestInterest(interestKey, sessionID);
 
         // waiting for the event of content message populating cache
         // refer to https://stackoverflow.com/questions/52608191/can-you-replace-events-with-promises-in-nodejs
         const Future = fn => {return new Promise((r,t) => fn(r,t) )};
         // define an eventFn that takes a promise `resolver`
         const eventFn = (resolve, t) => {
-            this.emitter.on(genCacheKey(key, rev), () => {
+            this.emitter.on(regId, () => {
                 // the event just happened; assumed that local cache has been populated
                 // to look up local cache again; should found {k-r, v}
                 // todo: to impl

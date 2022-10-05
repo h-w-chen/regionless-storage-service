@@ -1,5 +1,7 @@
-const {app} = require('./app');
-const icnService = require('../icn-protocol/service');
+const {app, cache} = require('./app');
+const {icnService, controller} = require('../icn-protocol/service');
+
+cache.setController(controller);
 
 const server = app.listen(8091, () => {
     console.log("leaf is listening on port 8091 for rkv client requests.");
