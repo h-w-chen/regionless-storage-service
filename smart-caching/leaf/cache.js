@@ -25,6 +25,11 @@ const LocalCache = class {
         this.kvstore.set(genCacheKey(key,rev), value);        
     }
 
+    // returns the value that already in cache, or undefined otherwise
+    getKeyOfRev(key, rev) {
+        return this.kvstore.get(genCacheKey(key, rev));
+    }
+
     async fetchKeyOfRev(key, rev) {
         let value = this.kvstore.get(genCacheKey(key, rev));
         if (value) {

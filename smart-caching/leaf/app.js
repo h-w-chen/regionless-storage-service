@@ -15,7 +15,9 @@ app.get('/kv', async (req, resp) => {
 
     try{
         // todo: k-r may be illegal combination; handle that properly
-        result = await cache.fetchKeyOfRev(key, rev);
+        await cache.fetchKeyOfRev(key, rev);
+        // now data should have been in the local store
+        result = cache.getKeyOfRev(key, rev);
         resp.end(result);
     } catch (e) {
         resp.status(500).end(`${e.message}`);
