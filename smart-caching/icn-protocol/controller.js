@@ -15,9 +15,12 @@ const Controller = class {
         // todo: send out IM if not in PIT, in background?
     }
 
-    OnContent(interest) {
-        // todo: update cache
-        let sessions = this.irt.list(interest);
+    OnContent(content) {
+        this.cache.setKeyOfRev(content.name, content.revStart, JSON.stringify(content.content));
+
+        let interestKey = `${content.name}:${content.revStart}`;
+        let sessions = this.irt.list(interestKey);
+        if (!sessions) return;
         for (let sess of sessions) {
             console.log(`to notify ${sess}`);
             this.cache.emitter.emit(sess);

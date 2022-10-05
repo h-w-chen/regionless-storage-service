@@ -36,6 +36,9 @@ const LocalCache = class {
             return value;
         }
     
+        // request ICN controlelr with interest
+        // todo: impl
+
         // waiting for the event of content message populating cache
         // refer to https://stackoverflow.com/questions/52608191/can-you-replace-events-with-promises-in-nodejs
         const Future = fn => {return new Promise((r,t) => fn(r,t) )};

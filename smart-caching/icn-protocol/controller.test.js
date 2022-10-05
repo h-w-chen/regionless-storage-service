@@ -1,10 +1,10 @@
-const Controller = require('./controller')
+const Controller = require('./controller');
 const Cache = require('../leaf/cache');
 const cacheTest = new Cache();
 const ctrlTest = new Controller(cacheTest);
 
 beforeAll(() => {
-    ctrlTest.irt.interests.set('wiz', new Set('abc'));
+    ctrlTest.irt.interests.set('wiz:2', new Set('abc'));
 });
 
 it('Controller processes interest request', ()=>{
@@ -15,7 +15,9 @@ it('Controller processes interest request', ()=>{
 
 it('Controller broadcasts interesting sessions', ()=>{
     const spy = jest.spyOn(cacheTest.emitter, 'emit');
-    ctrlTest.OnContent('wiz');
+    payload = {value: 'val of wiz-2'};
+    ctrlTest.OnContent({name: 'wiz', revStart: 2, content: payload});
     expect(spy).toHaveBeenCalledTimes(3);
     expect(spy.mock.calls).toEqual([['a'], ['b'], ['c']]);
+    expect(cacheTest.getKeyOfRev('wiz', 2)).toBe(JSON.stringify(payload));
 });
