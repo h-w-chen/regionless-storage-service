@@ -33,16 +33,18 @@ const LocalCache = class {
     
         // waiting for the event of content message populating cache
         // refer to https://stackoverflow.com/questions/52608191/can-you-replace-events-with-promises-in-nodejs
-        const Future = fn => {return new Promise((r,t) => fn(r,t))};
+        const Future = fn => {return new Promise((r,t) => fn(r,t) )};
         // define an eventFn that takes a promise `resolver`
         const eventFn = (resolve, t) => {
-            // do event related closure actions here. When finally done, call `resolve()`
             this.emitter.on(genCacheKey(key, rev), () => {
-                resolve();
+                // the event just happened; assumed that local cache has been populated
+                // to look up local cache again; should found {k-r, v}
+                // todo: to impl
+                resolve('lazy populated; to impl');
             });
         };
         // invoke eventFn in an `async` workflowFn using `Future` to obtain a `promise` wrapper
-        const workflowFn = async () => {await Future(eventFn)};
+        const workflowFn = async () => await Future(eventFn);
         let content = await withTimeout(3000, workflowFn());
         return content;
     }

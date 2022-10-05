@@ -24,6 +24,5 @@ it('cache missed initially and soon populated', async ()=>{
         cacheTest.emitter.emit('c:3');
     }, 1000 );
     let v = await cacheTest.fetchKeyOfRev('c', 3);
-    //expect(v).toBe('val of c-3');
-    expect(v).toBeUndefined();
+    expect(v).toBe('lazy populated; to impl');
 });
