@@ -4,7 +4,7 @@
   "description": "",
   "scripts": {
     "leaf": "cd leaf && node leaf",
-    "test": "jest --detectOpenHandles"
+    "test": "jest --forceExit"
   },
   "keywords": [],
   "author": "",
