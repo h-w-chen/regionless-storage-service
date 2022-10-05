@@ -14,6 +14,7 @@ app.get('/kv', async (req, resp) => {
     }
 
     try{
+        // todo: k-r may be illegal combination; handle that properly
         result = await cache.fetchKeyOfRev(key, rev);
         resp.end(result);
     } catch (e) {
