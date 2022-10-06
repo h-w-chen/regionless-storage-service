@@ -6,7 +6,7 @@ beforeAll(() => {
     cacheTest.setKeyOfRev('a', 1, 'a-1 val');
 
     const ctrlFake = {
-        ReuestInterest: jest.fn().mockReturnValue('dummy-id'),
+        RequestInterest: jest.fn().mockReturnValue('dummy-id'),
         RemoveInterest: jest.fn(),
     };
     cacheTest.setController(ctrlFake);

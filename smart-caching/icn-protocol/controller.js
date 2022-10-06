@@ -10,7 +10,7 @@ const Controller = class {
         this.cache = cache;
     }
 
-    ReuestInterest(interest, sessionID) {
+    RequestInterest(interest, sessionID) {
         this.irt.enlist(interest, sessionID);
         // todo: send out IM if not in PIT, in background?
         return sessionID;

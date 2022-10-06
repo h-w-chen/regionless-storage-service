@@ -46,7 +46,7 @@ const LocalCache = class {
         // request ICN controlelr with interest
         const sessionID = uuid.v4();
         const interestKey = `${key}:${rev}`;
-        let regId = this.controller.ReuestInterest(interestKey, sessionID);
+        let regId = this.controller.RequestInterest(interestKey, sessionID);
 
         // waiting for the event of content message populating cache
         // refer to https://stackoverflow.com/questions/52608191/can-you-replace-events-with-promises-in-nodejs
