@@ -5,9 +5,9 @@ beforeAll(() => {
     // test data
     cache.setKeyOfRev('k', 99, 'value of k-99');
 
-    const ctrlFake = {};
-    const ReuestInterest = jest.fn();
-    ctrlFake.ReuestInterest = ReuestInterest.bind(ctrlFake);
+    const ctrlFake = {
+        ReuestInterest: jest.fn(),
+    };
     cache.setController(ctrlFake);
 });
 

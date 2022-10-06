@@ -16,6 +16,10 @@ const Controller = class {
         return sessionID;
     }
 
+    RemoveInterest(interest, sessionID) {
+        this.irt.delist(interest, sessionID);
+    }
+
     OnContent(content) {
         this.cache.setKeyOfRev(content.name, content.revStart, JSON.stringify(content.contentStatic));
 

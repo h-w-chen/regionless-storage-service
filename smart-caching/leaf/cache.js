@@ -63,6 +63,7 @@ const LocalCache = class {
         // invoke eventFn in an `async` workflowFn using `Future` to obtain a `promise` wrapper
         const workflowFn = async () => await Future(eventFn);
         let content = await withTimeout(3000, workflowFn());
+        this.controller.RemoveInterest(interestKey, regId);
         return content;
     }
 };
