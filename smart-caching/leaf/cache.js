@@ -18,6 +18,7 @@ const genCacheKey = (key, rev) => `${key}:${rev}`;
 
 const LocalCache = class {
     constructor() {
+        // todo: replace with a LRU cache
         this.kvstore = new Map();
         this.emitter = new EventEmitter();
         this.controller = null;

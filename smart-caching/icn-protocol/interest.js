@@ -1,5 +1,4 @@
-// ICN protocol: interest massge
-
+// ICN protocol: interest massge of rkv static data
 const Interest = class {
     constructor(name, revStart, revEnd) {
         this.name = name;
