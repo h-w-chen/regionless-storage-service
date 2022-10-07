@@ -8,14 +8,14 @@ it('POST /contents should insert content in kv store', async () => {
     value = cache.getKeyOfRev('k', 1);
     expect(value).toBeUndefined();
 
-    payload = { value: 'val of k-1'};
-    content = new Content('k', 1, 5, payload);
+    payload = {code: 201, value: 'val of k-1'};
+    content = new Content('k', 1, 5, JSON.stringify(payload));
     await supertest(icnService)
         .post('/contents')
         .set('Content-type', 'application/json')
         .send(JSON.stringify(content))
         .expect(200)
         .expect(data => expect(data.text).toEqual('received'));
-    value = await cache.getKeyOfRev('k', 1);
-    expect(value).toBe(JSON.stringify(payload));
+    value = cache.getKeyOfRev('k', 1);
+    expect(value).toEqual(payload);
 });

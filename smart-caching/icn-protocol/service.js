@@ -13,7 +13,7 @@ icnService.use(bodyParser.urlencoded({extended: true}));
 
 icnService.post('/contents', (req, resp) => {
     console.log(">>>>", req.body);
-    content = req.body;
+    let content = req.body;
     // todo: convert to Content type object?
     controller.OnContent(content);
     resp.status(200).end('received');
