@@ -9,7 +9,7 @@ it('POST /contents should insert content in kv store', async () => {
     expect(value).toBeUndefined();
 
     payload = {code: 201, value: 'val of k-1'};
-    content = new Content('k', 1, 5, JSON.stringify(payload));
+    content = new Content('k', 1, 5, payload);
     await supertest(icnService)
         .post('/contents')
         .set('Content-type', 'application/json')

@@ -17,7 +17,7 @@ it('Controller processes interest request', ()=>{
 it('Controller broadcasts interesting sessions', ()=>{
     const spy = jest.spyOn(cacheTest.emitter, 'emit');
     payload = {code: 234, value: 'val of wiz-2'};
-    ctrlTest.OnContent({name: 'wiz', revStart: 2, contentStatic: JSON.stringify(payload)});
+    ctrlTest.OnContent({name: 'wiz', revStart: 2, contentStatic: payload});
     expect(spy).toHaveBeenCalledTimes(3);
     expect(spy.mock.calls).toEqual([['a'], ['b'], ['c']]);
     expect(cacheTest.getKeyOfRev('wiz', 2)).toEqual(payload);

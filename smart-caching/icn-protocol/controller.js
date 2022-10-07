@@ -26,7 +26,7 @@ const Controller = class {
     }
 
     OnContent(content) {
-        this.cache.setKeyOfRev(content.name, content.revStart, JSON.parse(content.contentStatic));
+        this.cache.setKeyOfRev(content.name, content.revStart, content.contentStatic);
 
         let interestKey = `${content.name}:${content.revStart}`;
         let sessions = this.irt.list(interestKey);
