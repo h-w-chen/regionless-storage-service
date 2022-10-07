@@ -15,8 +15,7 @@ const Controller = class {
     RequestInterest(interest, sessionID) {
         this.irt.enlist(interest, sessionID);
         if (!this.pit.has(interest)){
-            this.pit.add(interest);
-            // todo: send out IM if not in PIT, in background?
+            this.pit.addInterest(interest);
         }
         return sessionID;
     }
