@@ -1,5 +1,9 @@
 const {app, cache} = require('./app');
 const {icnService, controller} = require('../icn-protocol/service');
+const config = require('config');
+
+console.log(config);
+console.log(config.get('ccn.route./'));
 
 cache.setController(controller);
 
