@@ -1,4 +1,5 @@
-const { EventEmitter } = require("events");
+const { EventEmitter, once } = require("events");
+
 const uuid = require("uuid");
 
 const withTimeout = async (millis, promise) => {
@@ -48,23 +49,12 @@ const LocalCache = class {
         const interestKey = `${key}:${rev}`;
         let regId = this.controller.RequestInterest(interestKey, sessionID);
 
-        // waiting for the event of content message populating cache
-        // refer to https://stackoverflow.com/questions/52608191/can-you-replace-events-with-promises-in-nodejs
-        const Future = fn => {return new Promise((r,t) => fn(r,t) )};
-        // define an eventFn that takes a promise `resolver`
-        const eventFn = (resolve, t) => {
-            this.emitter.on(regId, () => {
-                // the event just happened; assumed that local cache has been populated
-                // to look up local cache again; should found {k-r, v}
-                // todo: to impl
-                resolve('lazy populated; to impl');
-            });
-        };
-        // invoke eventFn in an `async` workflowFn using `Future` to obtain a `promise` wrapper
-        const workflowFn = async () => await Future(eventFn);
-        let content = await withTimeout(3000, workflowFn());
-        this.controller.RemoveInterest(interestKey, regId);
-        return content;
+        try{
+            let content = await withTimeout(3000, once(this.emitter, regId).then(() => 'lazy populated'));
+            return content;
+        } finally {
+            this.controller.RemoveInterest(interestKey, regId);
+        }
     }
 };
 

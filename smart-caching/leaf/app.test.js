@@ -7,6 +7,7 @@ beforeAll(() => {
 
     const ctrlFake = {
         RequestInterest: jest.fn(),
+        RemoveInterest: jest.fn(),
     };
     cache.setController(ctrlFake);
 });

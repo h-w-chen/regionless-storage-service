@@ -30,5 +30,5 @@ it('cache missed initially and soon populated', async ()=>{
         cacheTest.emitter.emit('dummy-id');
     }, 1000 );
     let v = await cacheTest.fetchKeyOfRev('c', 3);
-    expect(v).toBe('lazy populated; to impl');
+    expect(v).toBe('lazy populated');
 });
