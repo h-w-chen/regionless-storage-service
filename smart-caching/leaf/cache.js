@@ -29,10 +29,13 @@ const LocalCache = class {
         this.controller = controller;
     }
 
-    setKeyOfRev(key, rev, value) {
-        this.kvstore.set(genCacheKey(key,rev), value);        
+    setKeyOfRev(key, rev, codeValue) {
+        // assuming codeValue like {code: 200, value: "value of key of rev"}
+        // for static content record
+        this.kvstore.set(genCacheKey(key,rev), codeValue);
     }
 
+    // test hook
     // returns the value that already in cache, or undefined otherwise
     getKeyOfRev(key, rev) {
         return this.kvstore.get(genCacheKey(key, rev));
@@ -50,8 +53,9 @@ const LocalCache = class {
         let regId = this.controller.RequestInterest(interestKey, sessionID);
 
         try{
-            let content = await withTimeout(3000, once(this.emitter, regId).then(() => 'lazy populated'));
-            return content;
+            await withTimeout(3000, once(this.emitter, regId).then(() => 'lazy populated'));
+            // now data should have been in the local store
+            return this.getKeyOfRev(key, rev);
         } finally {
             this.controller.RemoveInterest(interestKey, regId);
         }
