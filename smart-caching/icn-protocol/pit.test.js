@@ -11,8 +11,9 @@ it('PIT able to check pending interest', () => {
 
 it('PIT able to insert pending interest', () => {
     expect(pitTest.has("test:10:10")).toBe(false);
-    pitTest.addInterest("test:10:10");
+    p = pitTest.addInterest("test:10:10");
     expect(pitTest.has("test:10:10")).toBe(true);
+    return p;
 });
 
 it('PIT able to delete pending interest', () => {

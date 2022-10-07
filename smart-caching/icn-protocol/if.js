@@ -1,5 +1,5 @@
 // ICN Interest Forwarder
-
+const axios = require('axios');
 const Interest = require('./interest');
 
 function parseInterest(interestKey) {
@@ -10,16 +10,22 @@ function parseInterest(interestKey) {
 const InterestForwarder = class {
     forward(interestKey) {
         let interest = parseInterest(interestKey);
-        this.sendInterest(this.getNextHop(interest), interest);
+        let nextHop = this.getNextHop(interest);
+        return this.sendInterest(nextHop, interest)
+        .then(() => {})
+        .catch((err) => {
+                // todo: retry with another destination?
+                console.log(err);
+            });
     }
 
     getNextHop(interest) {
         // todo: lookup routing table
-        return "127.0.0.1:10101";   //for local test purpose only
+        return "http://127.0.0.1:10101/interests";   //for local test purpose only
     }
 
-    sendInterest(node, interest) {
-        // todo
+    async sendInterest(node, interest) {
+        return axios.post(node, interest);
     }
 };
 
