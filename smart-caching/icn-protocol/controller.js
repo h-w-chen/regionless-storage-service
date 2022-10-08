@@ -26,7 +26,11 @@ const Controller = class {
     }
 
     OnContent(content) {
-        this.cache.setKeyOfRev(content.name, content.revStart, content.contentStatic);
+        content.contentStatic.forEach((c) => {
+            this.cache.setKeyOfRev(content.name,
+                c.rev,
+                {code: c.code, value: c.value});
+        });
 
         let interestKey = `${content.name}:${content.revStart}`;
         let sessions = this.irt.list(interestKey);
