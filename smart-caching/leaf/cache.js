@@ -42,7 +42,7 @@ const LocalCache = class {
     }
 
     async fetchKeyOfRev(key, rev) {
-        let value = this.kvstore.get(genCacheKey(key, rev));
+        const value = this.kvstore.get(genCacheKey(key, rev));
         if (value) {
             return value;
         }
@@ -50,7 +50,7 @@ const LocalCache = class {
         // request ICN controlelr with interest
         const sessionID = uuid.v4();
         const interestKey = `${key}:${rev}`;
-        let regId = this.controller.RequestInterest(interestKey, sessionID);
+        const regId = this.controller.RequestInterest(interestKey, sessionID);
 
         try{
             await withTimeout(3000, once(this.emitter, regId).then(() => 'lazy populated'));
