@@ -1,7 +1,9 @@
 const PIT = require('./pit');
 
 beforeAll(() => {
-    pitTest = new PIT().add("k:1:3").add("test:3:4");
+    pitTest = new PIT();
+    pitTest.add("k:1:3");
+    pitTest.add("test:3:4");
 });
 
 it('PIT able to check pending interest', () => {
@@ -11,7 +13,7 @@ it('PIT able to check pending interest', () => {
 
 it('PIT able to insert pending interest', () => {
     expect(pitTest.has("test:10:10")).toBe(false);
-    p = pitTest.addInterest("test:10:10");
+    p = pitTest.add("test:10:10");
     expect(pitTest.has("test:10:10")).toBe(true);
     return p;
 });

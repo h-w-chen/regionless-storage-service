@@ -8,7 +8,7 @@ const PIT = class extends Set {
         this.interestForwarder = interestForwarder;
     }
 
-    addInterest(interest) {
+    add(interest) {
         super.add(interest);
         return this.interestForwarder.forward(interest);
     }

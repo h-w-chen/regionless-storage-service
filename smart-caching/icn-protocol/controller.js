@@ -16,7 +16,7 @@ const Controller = class {
         this.irt.enlist(interest, sessionID);
         if (!this.pit.has(interest)){
             // todo: fix test leak of open handler??
-            this.pit.addInterest(interest);
+            this.pit.add(interest);
         }
         return sessionID;
     }
