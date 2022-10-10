@@ -9,14 +9,16 @@ function parseInterest(interestKey) {
 
 const InterestForwarder = class {
     forward(interestKey) {
-        let interest = parseInterest(interestKey);
-        let nextHop = this.getNextHop(interest);
+        const interest = parseInterest(interestKey);
+        const nextHop = this.getNextHop(interest);
         return this.sendInterest(nextHop, interest)
-        .then(() => {})
-        .catch((err) => {
-                // todo: retry with another destination?
-                console.log(err);
-            });
+        .then((data) => {
+            console.log(`interest message forwarded successfully: ${interestKey} to ${data}`);
+            return Promise.resolve('sent ok');
+        }).catch((err) => {
+            // todo: retry by some means, e.g. with another destination?
+            console.log(err);
+        });
     }
 
     getNextHop(interest) {

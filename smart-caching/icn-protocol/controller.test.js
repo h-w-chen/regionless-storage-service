@@ -3,6 +3,10 @@ const Cache = require('../leaf/cache');
 const cacheTest = new Cache();
 const ctrlTest = new Controller(cacheTest);
 
+jest.mock("axios");
+const mockAxios = require("axios");
+mockAxios.post.mockImplementation((node) => Promise.resolve(node));
+
 beforeAll(() => {
     ctrlTest.irt.interests.set('wiz:2', new Set('abc'));
 });
