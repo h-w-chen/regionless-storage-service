@@ -1,12 +1,14 @@
-const PIT = require('./pit');
 jest.mock("axios");
 const mockAxios = require("axios");
 mockAxios.post.mockImplementation((node) => Promise.resolve(node));
 
+const PIT = require('./pit');
+pitTest = new PIT();
+pitTest.add("k:1:3");
+pitTest.add("test:3:4");
+
 beforeAll(() => {
-    pitTest = new PIT();
-    pitTest.add("k:1:3");
-    pitTest.add("test:3:4");
+    jest.clearAllMocks();
 });
 
 it('PIT able to check pending interest', () => {
@@ -19,6 +21,7 @@ it('PIT able to insert pending interest and send out interest message', async ()
     p = await pitTest.add("test:10:10");
     expect(pitTest.has("test:10:10")).toBe(true);
     expect(p).toBe('sent ok');
+    expect(mockAxios.post).toHaveBeenCalledTimes(1);
 });
 
 it('PIT able to delete pending interest', () => {
