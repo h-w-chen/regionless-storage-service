@@ -6,9 +6,9 @@ const IRT = require('./irt');
 const PIT = require('./pit');
 
 const Controller = class {
-    constructor (cache) {
+    constructor (cache, routes) {
         this.irt = new IRT();
-        this.pit = new PIT();
+        this.pit = new PIT(routes);
         this.cache = cache;
     }
 

@@ -1,6 +1,7 @@
 // ICN Interest Forwarder
 const axios = require('axios');
 const Interest = require('./interest');
+const Routes = require('./routes').Store;
 
 function parseInterest(interestKey) {
     const {name, revStart, revEnd} = interestKey.split(':');
@@ -8,6 +9,14 @@ function parseInterest(interestKey) {
 }
 
 const InterestForwarder = class {
+    constructor(routes) {
+        this.routes = new Routes();
+        routes.forEach(r => {
+            this.routes.add(r);
+        });
+        this.routes.build();
+    }
+
     forward(interestKey) {
         const interest = parseInterest(interestKey);
         const nextHop = this.getNextHop(interest);

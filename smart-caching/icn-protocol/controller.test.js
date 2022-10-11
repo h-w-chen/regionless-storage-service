@@ -1,7 +1,7 @@
 const Controller = require('./controller');
 const Cache = require('../leaf/cache');
 const cacheTest = new Cache();
-const ctrlTest = new Controller(cacheTest);
+const ctrlTest = new Controller(cacheTest, ['/dummy1']);
 
 jest.mock("axios");
 const mockAxios = require("axios");

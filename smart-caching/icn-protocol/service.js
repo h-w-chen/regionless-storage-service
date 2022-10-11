@@ -7,7 +7,8 @@ const icnService = express();
 
 const {cache} = require('../leaf/app');
 const Controller = require('./controller');
-const controller = new Controller(cache);
+// todo: get icn routes setting
+const controller = new Controller(cache, ['/todo']);
 
 const bodyParser = require('body-parser');
 icnService.use(bodyParser.json());
