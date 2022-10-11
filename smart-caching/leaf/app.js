@@ -2,7 +2,7 @@ const express = require('express');
 const app = express();
 
 const Cache = require('./cache');
-const cache = new Cache();
+const cache = new Cache({max: 5});  //todo: configure; 5 for demo purpose
 
 // R: kv?key=k&rev=r
 app.get('/kv', async (req, resp) => {

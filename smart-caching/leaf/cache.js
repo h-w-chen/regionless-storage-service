@@ -1,5 +1,5 @@
 const { EventEmitter, once } = require("events");
-
+const LRU = require('lru-cache')
 const uuid = require("uuid");
 
 const withTimeout = async (millis, promise) => {
@@ -18,9 +18,9 @@ const withTimeout = async (millis, promise) => {
 const genCacheKey = (key, rev) => `${key}:${rev}`;
 
 const LocalCache = class {
-    constructor() {
+    constructor(option) {
         // todo: replace with a LRU cache
-        this.kvstore = new Map();
+        this.kvstore = new LRU(option);
         this.emitter = new EventEmitter();
         this.controller = null;
     }
