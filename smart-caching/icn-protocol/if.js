@@ -4,17 +4,21 @@ const Interest = require('./interest');
 const Routes = require('./routes').Store;
 
 function parseInterest(interestKey) {
-    const {name, revStart, revEnd} = interestKey.split(':');
-    return new Interest(name, revStart, revEnd);
+    const arr = interestKey.split(':');
+    if (!arr[0].startsWith('/')) {
+        arr[0] = `/${arr[0]}`
+    };
+    return new Interest(arr[0], arr[1], arr[2]);
 }
 
 const InterestForwarder = class {
-    constructor(routes) {
+    constructor(routes, routeMaps) {
         this.routes = new Routes();
         routes.forEach(r => {
             this.routes.add(r);
         });
         this.routes.build();
+        this.routeMaps = routeMaps;
     }
 
     forward(interestKey) {
@@ -32,7 +36,9 @@ const InterestForwarder = class {
 
     getNextHop(interest) {
         // todo: lookup routing table
-        return "http://127.0.0.1:10101/interests";   //for local test purpose only
+        const nextHopRoute = this.routes.findLPM(interest.name);
+        const nextHopDestination = this.routeMaps[nextHopRoute][0];
+        return`http://${nextHopDestination}/interests`;
     }
 
     async sendInterest(node, interest) {
