@@ -1,6 +1,8 @@
 const supertest = require('supertest');
 const {icnService} = require('./service');
 const {cache} = require('../leaf/app');
+const Controller = require('./controller');
+controller = new Controller(cache, ['/'], new Map([['/', ['1.2.3.4']]]));
 
 const Content = require('./content');
 

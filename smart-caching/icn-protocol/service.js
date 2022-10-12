@@ -20,4 +20,4 @@ icnService.post('/contents', (req, resp) => {
     resp.status(200).end('received');
 });
 
-module.exports = {icnService, controller};
+module.exports = {icnService};
