@@ -52,8 +52,9 @@ const LocalCache = class {
         const interestKey = `${key}:${rev}`;
         const regId = this.controller.RequestInterest(interestKey, sessionID);
 
+        const cacheTimeout = timeout || 3000;
         try{
-            await withTimeout(3000, once(this.emitter, regId).then(() => 'lazy populated'));
+            await withTimeout(cacheTimeout, once(this.emitter, regId).then(() => 'lazy populated'));
             // now data should have been in the local store
             return this.getKeyOfRev(key, rev);
         } finally {

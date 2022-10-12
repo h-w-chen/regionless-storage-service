@@ -1,3 +1,5 @@
+maxCacheRecords = 3;    // test setting
+
 const supertest = require('supertest');
 const {icnService} = require('./service');
 const {cache} = require('../leaf/app');

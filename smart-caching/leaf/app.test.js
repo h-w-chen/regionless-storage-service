@@ -1,3 +1,6 @@
+maxCacheRecords = 3;    // test setting
+timeout = 2000;         // test setting
+
 const {app, cache} = require('./app');
 const supertest = require("supertest");
 

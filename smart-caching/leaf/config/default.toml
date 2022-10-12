@@ -1,3 +1,8 @@
+# Leaf setting
+[leaf]
+"timeout" = 30000       #response timeout in ms; default 3000ms
+"maxCacheRecords" = 5   #cache capacity, default 1,000,000 items
+
 # CCN routing table for the leaf
 [ccn.route]
 "/"     = ["127.0.0.1:9998", "192.168.0.25:9999"]

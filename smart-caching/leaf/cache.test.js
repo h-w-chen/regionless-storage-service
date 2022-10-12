@@ -1,6 +1,7 @@
+timeout = 2000; // test setting
+
 const Cache = require('./cache');
 const cacheTest = new Cache({ max: 3 });
-
 
 describe('cache api', () => {
     beforeAll(() => {
