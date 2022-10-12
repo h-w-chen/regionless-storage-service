@@ -3,7 +3,7 @@ const mockAxios = require("axios");
 mockAxios.post.mockImplementation((node) => Promise.resolve(node));
 
 const PIT = require('./pit');
-pitTest = new PIT(['/'], {'/':['1.2.3.4']});
+pitTest = new PIT(['/'], new Map([['/', ['1.2.3.4']]]));
 pitTest.add("k:1:3");
 pitTest.add("test:3:4");
 

@@ -1,8 +1,20 @@
-const {app, cache} = require('./app');
-const {icnService, controller} = require('../icn-protocol/service');
+// leaf setting
 const config = require('config');
-
 console.log(config);
+routes = config.get('ccn.route');
+routeMaps = new Map();
+Object.keys(routes).forEach(r => routeMaps.set(r, config.get(`ccn.route.${r}`)));
+console.log('leaf routing table is ', routeMaps);
+
+// prepare various components
+const {app, cache} = require('./app');
+const Controller = require('../icn-protocol/controller');
+// todo: get icn routes setting
+controller = new Controller(cache, Object.keys(routes), routeMaps);
+
+const {icnService} = require('../icn-protocol/service');
+
+
 console.log(config.get('ccn.route./'));
 
 cache.setController(controller);

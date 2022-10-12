@@ -37,7 +37,7 @@ const InterestForwarder = class {
     getNextHop(interest) {
         // todo: lookup routing table
         const nextHopRoute = this.routes.findLPM(interest.name);
-        const nextHopDestination = this.routeMaps[nextHopRoute][0];
+        const nextHopDestination = this.routeMaps.get(nextHopRoute)[0];
         return`http://${nextHopDestination}/interests`;
     }
 
