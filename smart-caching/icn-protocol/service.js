@@ -15,7 +15,7 @@ function toContentMessage(body) {
 
 icnService.post('/contents', (req, resp) => {
     console.log(">>>>", req.body);
-    let content = toContentMessage(req.body);
+    const content = toContentMessage(req.body);
     controller.OnContent(content);
     resp.status(200).end('received');
 });

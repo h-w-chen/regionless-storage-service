@@ -15,7 +15,6 @@ const Controller = class {
     RequestInterest(interest, sessionID) {
         this.irt.enlist(interest, sessionID);
         if (!this.pit.has(interest)){
-            // todo: fix test leak of open handler??
             this.pit.add(interest);
         }
         return sessionID;
@@ -32,8 +31,8 @@ const Controller = class {
                 {code: c.code, value: c.value});
         });
 
-        let interestKey = `${content.name}:${content.revStart}`;
-        let sessions = this.irt.list(interestKey);
+        const interestKey = `${content.name}:${content.revStart}`;
+        const sessions = this.irt.list(interestKey);
         this.pit.delete(interestKey);
         if (!sessions) return;
         for (let sess of sessions) {
