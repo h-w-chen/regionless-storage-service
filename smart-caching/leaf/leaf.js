@@ -18,10 +18,10 @@ const {icnService} = require('../icn-protocol/service');
 
 cache.setController(controller);
 
-const server = app.listen(8091, () => {
+const server = app.listen(8090, () => {
     console.log("leaf is listening on port 8091 for rkv client requests.");
 });
 
-const icnServer = icnService.listen(10305, () => {
+const icnServer = icnService.listen(10085, () => {
     console.log("leaf is listening on port 10305 for internal ICN content packets.");
 });
