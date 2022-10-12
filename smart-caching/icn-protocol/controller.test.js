@@ -3,7 +3,6 @@ const Cache = require('../leaf/cache');
 const cacheTest = new Cache();
 const ctrlTest = new Controller(
     cacheTest,
-    ['/'],
     new Map([['/', ['127.0.0.1:10101']]]));
 
 jest.mock("axios");

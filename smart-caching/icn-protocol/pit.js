@@ -2,9 +2,9 @@
 const InterestForwarder = require('./if');
 
 const PIT = class extends Set {
-    constructor(routes, routeMaps) {
+    constructor(fib) {
         super();
-        this.interestForwarder = new InterestForwarder(routes, routeMaps);
+        this.interestForwarder = new InterestForwarder(fib);
     }
 
     add(interest) {

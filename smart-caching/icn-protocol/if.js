@@ -12,13 +12,13 @@ function parseInterest(interestKey) {
 }
 
 const InterestForwarder = class {
-    constructor(routes, routeMaps) {
+    constructor(fib) {
         this.routes = new Routes();
-        routes.forEach(r => {
+        [...fib.keys()].forEach(r => {
             this.routes.add(r);
         });
         this.routes.build();
-        this.routeMaps = routeMaps;
+        this.fib = fib;
     }
 
     forward(interestKey) {
@@ -37,7 +37,7 @@ const InterestForwarder = class {
     getNextHop(interest) {
         // todo: lookup routing table
         const nextHopRoute = this.routes.findLPM(interest.name);
-        const nextHopDestination = this.routeMaps.get(nextHopRoute)[0];
+        const nextHopDestination = this.fib.get(nextHopRoute)[0];
         return`http://${nextHopDestination}/interests`;
     }
 

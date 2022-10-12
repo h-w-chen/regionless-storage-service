@@ -9,8 +9,7 @@ console.log('leaf routing table is ', routeMaps);
 // prepare various components
 const {app, cache} = require('./app');
 const Controller = require('../icn-protocol/controller');
-// todo: get icn routes setting
-controller = new Controller(cache, Object.keys(routes), routeMaps);
+controller = new Controller(cache, routeMaps);
 
 const {icnService} = require('../icn-protocol/service');
 
