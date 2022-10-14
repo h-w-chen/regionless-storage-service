@@ -4,6 +4,7 @@
   "description": "",
   "scripts": {
     "leaf": "cd leaf && node leaf",
+    "adapter": "cd adapter && node adapter",
     "test": "jest --detectOpenHandles"
   },
   "keywords": [],
