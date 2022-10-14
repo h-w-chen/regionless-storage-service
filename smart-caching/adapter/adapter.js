@@ -1,5 +1,6 @@
 // smart caching adapter
-const interestService = require('../icn-protocol/interestService');
+const createInterestService = require('../icn-protocol/interestService');
+const interestService = createInterestService();
 
 // reading the setting
 

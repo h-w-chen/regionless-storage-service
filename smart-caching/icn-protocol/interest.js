@@ -5,6 +5,13 @@ const Interest = class {
         this.revStart = revStart || 0;
         this.revEnd = revEnd || -1;
     }
+
+    static FromObject(obj) {
+        if (!obj.name || !obj.revStart || !obj.revEnd)
+            throw new Error('invalid interest format');
+
+        return new Interest(obj.name, obj.revStart, obj.revEnd);
+    }
 };
 
 module.exports = Interest;
