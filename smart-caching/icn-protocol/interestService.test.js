@@ -10,7 +10,7 @@ const Interest = require('./interest');
 describe('adapter', () => {
     describe('given an interest message', () => {
         it('should return 200 and ACK', async () => {
-            const interest = new Interest('k', 1, 2);
+            const interest = new Interest('k', 1, 1);
             const {text, statusCode} = await supertest(testServer)
                 .post('/interests')
                 //.set('Content-Type', 'application/json')
@@ -21,18 +21,22 @@ describe('adapter', () => {
 
         it('should put in pit, if not yet', async () => {
             const interest = new Interest('k', 1, 2);
+            const pitMock = jest.spyOn(testPIT, 'add');
             await supertest(testServer)
                 .post('/interests')
                 .send(interest);
-            expect(testPIT.has('k:1:2')).toBeTruthy();
+            expect(pitMock).toHaveBeenCalledWith('k:1:2');
+            pitMock.mockRestore();
         });
 
         it('should enlist in irt', async () => {
-            const interest = new Interest('k', 1, 2);
+            const interest = new Interest('k', 1, 3);
+            const irtMock = jest.spyOn(testIRT, 'enlist');
             await supertest(testServer)
                 .post('/interests')
                 .send(interest);
-            expect(testIRT.list('k:1:2')).toEqual(new Set().add('::ffff:127.0.0.1'));
+            expect(irtMock).toHaveBeenCalledWith('k:1:3', '::ffff:127.0.0.1');
+            irtMock.mockRestore();
         });
     });
 });
