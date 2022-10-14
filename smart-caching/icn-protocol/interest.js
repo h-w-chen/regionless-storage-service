@@ -12,6 +12,10 @@ const Interest = class {
 
         return new Interest(obj.name, obj.revStart, obj.revEnd);
     }
+
+    key() {
+        return `${this.name}:${this.revStart}:${this.revEnd}`;
+    }
 };
 
 module.exports = Interest;
