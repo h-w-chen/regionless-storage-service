@@ -4,11 +4,13 @@ const Content = require('../icn-protocol/content')
 const axios = require('axios');
 
 const convertToContent = (name, revStart, revEnd, records) => {
-    // todo: extract code
     const contentRecords = [];
     let i = 0;
     for (const record of records) {
-        contentRecords.push({code: 200, rev: revStart + i, value: record});
+        contentRecords.push({
+            code: record.status,
+            rev: revStart + i,
+            value: record.data});
         i += 1;
     }
     const content = new Content(name, revStart, revEnd, contentRecords);
@@ -20,7 +22,9 @@ const request = async (client, interest) => {
     for (let i = interest.revStart; i <= interest.revEnd; i+=1) {
         reqs.push(
             client.get(`?key=${interest.name}&rev=${i}`)
-                .catch((e) => e.toString()));
+                .catch((e) => {
+                    return e.response;
+                } ));
     }
     const resps = await Promise.all(reqs);
     return resps;
