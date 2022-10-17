@@ -2,12 +2,16 @@ const createInterestService = require('./interestService');
 const testPIT = new Set();
 const IRT = require('./irt');
 const testIRT = new IRT();
-const testServer = createInterestService(testPIT, testIRT);
 
 const supertest = require('supertest');
 const Interest = require('./interest');
 
-describe('adapter', () => {
+describe('interest service', () => {
+    beforeEach(() => {
+        cb = jest.fn().mockResolvedValueOnce('resolved');
+        testServer = createInterestService(testPIT, testIRT, cb);
+    });
+
     describe('given an interest message', () => {
         it('should return 200 and ACK', async () => {
             const interest = new Interest('k', 1, 1);

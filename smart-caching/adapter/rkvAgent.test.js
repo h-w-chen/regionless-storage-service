@@ -11,9 +11,18 @@ describe('rkv agant', () => {
             jest.spyOn(axios, 'get').mockResolvedValueOnce('dummy1').mockResolvedValueOnce('dummy2');
             const testAgant = new RKVAgent('http://127.0.0.1:8090/kv');
 
+            const contentExpected = {
+                "name": "k",
+                "revStart": 1,
+                "revEnd": 2,
+                "contentStatic": [
+                    {rev: 1, code: 200, value: "dummy1"},
+                    {rev: 2, code: 200, value: "dummy2"},
+                ]};
+
             const interest = new Interest('k', 1, 2);
-            const content = await testAgant.request(interest);
-            expect(content).toEqual(['dummy1', 'dummy2']);
+            const content = await testAgant.processInterest(interest);
+            expect(content).toEqual(contentExpected);
             expect(axios.get).toHaveBeenCalledWith('?key=k&rev=1');
             expect(axios.get).toHaveBeenCalledWith('?key=k&rev=2');
 

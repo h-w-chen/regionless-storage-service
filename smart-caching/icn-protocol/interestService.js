@@ -3,7 +3,7 @@ const bodyParser = require('body-parser');
 const Interest = require('./interest');
 
 
-const createInterestService = (pit, irt) => {
+const createInterestService = (pit, irt, genInterestPromise) => {
     const app = express();
     app.use(bodyParser.json());
     app.use(bodyParser.urlencoded({extended: true}));
@@ -16,6 +16,7 @@ const createInterestService = (pit, irt) => {
         interestKey = interest.key();
         if (!pit.has(interestKey)){
             pit.add(interestKey);
+            genInterestPromise(interest);
             // todo: promise rkv client does the job
             // new Promise((resolve)=>{
             //     setTimeout( () => {
