@@ -39,7 +39,7 @@ describe('interest service', () => {
             await supertest(testServer)
                 .post('/interests')
                 .send(interest);
-            expect(irtMock).toHaveBeenCalledWith('k:1:3', '::ffff:127.0.0.1');
+            expect(irtMock).toHaveBeenCalledWith('k:1:3', '127.0.0.1');
             irtMock.mockRestore();
         });
     });

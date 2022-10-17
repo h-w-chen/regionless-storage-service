@@ -9,7 +9,7 @@ const createInterestService = (pit, irt, genInterestPromise) => {
     app.use(bodyParser.urlencoded({extended: true}));
 
     app.post('/interests', (req, resp) => {
-        const fromIP = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+        const fromIP = (req.headers['x-forwarded-for'] || req.socket.remoteAddress).split(':').pop();
         console.log(`from: ${fromIP}  >>>> ${req.body}`);
         const interest = Interest.FromObject(req.body);
 
