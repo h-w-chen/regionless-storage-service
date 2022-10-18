@@ -1,5 +1,5 @@
 const config = {
-  verbose: false,
+  verbose: true,
   collectCoverageFrom: [
     "leaf/*.js",
     "adapter/*.js",
