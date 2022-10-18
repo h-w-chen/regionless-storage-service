@@ -14,7 +14,7 @@ rkvClient = new RKVAgent('http://127.0.0.1:8090/kv');
 const createContentDispatcher = require('../icn-protocol/contentDispatcher');
 contentDispatcher = createContentDispatcher();
 
-const rkvPromiseOfInterest = async (interest) => {
+const rkvPromiseOfInterest = (interest) => {
     return rkvClient.processInterest(interest)
         .then((content) => {
             // console.log('content:', content);

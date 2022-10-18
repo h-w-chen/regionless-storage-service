@@ -15,7 +15,7 @@ const convertToContent = (name, revStart, revEnd, records) => {
     }
     const content = new Content(name, revStart, revEnd, contentRecords);
     return content;
-}
+};
 
 const request = async (client, interest) => {
     const reqs = [];
@@ -23,12 +23,14 @@ const request = async (client, interest) => {
         reqs.push(
             client.get(`?key=${interest.name}&rev=${i}`)
                 .catch((e) => {
+                    // console.log('rkv agnet error:', e);
+                    // todo: process other error than rkv responded (no e.response)
                     return e.response;
                 } ));
     }
     const resps = await Promise.all(reqs);
     return resps;
-}
+};
 
 const RKVAgent = class {
     constructor(url) {

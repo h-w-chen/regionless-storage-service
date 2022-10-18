@@ -9,13 +9,13 @@ const ContentDispatcher = class {
 
     async sendContent(nodes, content) {
         const reqs = [];
-        for(let ip of nodes) {
-            console.log(`<<<<<< content to ${ip}: `, content);
+        for(let node of nodes) {
+            console.log(`<<<<<< content to ${node}: `, content);
             reqs.push(this.client.post(
-                `http://${ip}:10085/contents`,
+                `http://${node}:10085/contents`,
                 content));
         }
-        return await Promise.all(reqs)
+        return await Promise.all(reqs);
     }
 };
 
