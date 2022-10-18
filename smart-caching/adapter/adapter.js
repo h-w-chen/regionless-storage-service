@@ -20,7 +20,7 @@ const rkvPromiseOfInterest = async (interest) => {
             // console.log('content:', content);
             const nodes = irt.list(interest.key());
             pit.delete(interest.key());
-            irt.interests.delete(interest.key());
+            irt.delete(interest.key());
             return contentDispatcher.sendContent(nodes, content);
         }).catch((e) => {
             console.error(`got runtime error while processing interest/content: ${e}`);

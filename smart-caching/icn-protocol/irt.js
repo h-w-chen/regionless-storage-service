@@ -27,6 +27,11 @@ const IRT = class {
         }
     }
 
+    // delete all registered to a specific interest
+    delete(interest) {
+        this.interests.delete(interest);
+    }
+
     // get enlisted requests of a given interest
     list(interest) {
         return this.interests.get(interest);
