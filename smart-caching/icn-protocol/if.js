@@ -3,10 +3,11 @@ const axios = require('axios');
 const Interest = require('./interest');
 const Routes = require('./routes').Store;
 
+// extract and normalize interest name from synthesized key
 function parseInterest(interestKey) {
     const arr = interestKey.split(':');
     if (!arr[0].startsWith('/')) {
-        arr[0] = `/${arr[0]}`
+        arr[0] = `/${arr[0]}`;
     };
     return new Interest(arr[0], arr[1], arr[2]);
 }
@@ -34,6 +35,7 @@ const InterestForwarder = class {
         });
     }
 
+    // identify the next hop based on icn routing table
     getNextHop(interest) {
         // todo: lookup routing table
         const nextHopRoute = this.routes.findLPM(interest.name);
@@ -41,9 +43,13 @@ const InterestForwarder = class {
         return`http://${nextHopDestination}/interests`;
     }
 
-    async sendInterest(node, interest) {
-        return axios.post(node, interest);
+    async sendInterest(url, interest) {
+        return axios.post(url, interest);
     }
 };
 
-module.exports = InterestForwarder;
+const createIF = (fib) => {
+    return new InterestForwarder(fib);
+};
+
+module.exports = createIF;

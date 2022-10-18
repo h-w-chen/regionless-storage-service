@@ -1,10 +1,10 @@
 // ICN Pending Interest Table
-const InterestForwarder = require('./if');
+const createIF = require('./if');
 
 const PIT = class extends Set {
     constructor(fib) {
         super();
-        this.interestForwarder = new InterestForwarder(fib);
+        this.interestForwarder = createIF(fib);
     }
 
     add(interest) {
