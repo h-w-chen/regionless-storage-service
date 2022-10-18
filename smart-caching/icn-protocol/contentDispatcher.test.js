@@ -3,8 +3,6 @@ const Content = require('./content');
 const axios = require('axios');
 
 describe('content dispatcher', () => {
-    //let contentDispatcher;
-
     beforeEach(() => {
         jest.spyOn(axios, 'create').mockImplementation(() => axios);
         jest.spyOn(axios, 'post')
