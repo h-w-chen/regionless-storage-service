@@ -30,7 +30,7 @@ const rkvPromiseOfInterest = (interest) => {
                 } else {
                     console.log(`++++++ undelivered content to ${nodes[index]}`);
                     deadletters.add(content);
-                    // todo: redeliver dead letters, if the future
+                    // todo: redeliver dead letters, in the future
                 }
             });
         }).catch((e) => {
@@ -40,6 +40,37 @@ const rkvPromiseOfInterest = (interest) => {
 const interestService = createInterestService(pit, irt, rkvPromiseOfInterest);
 
 // start interest message service
-const server = interestService.listen(10086, ()=>{
+const server = interestService.listen(10086, () => {
     console.log("adapter is listening on port 10086 for internal Interest messages");
 });
+
+const { CronJob } = require('cron');
+const deadletterDelivery = new CronJob(
+    '*/30 * * * * *',   // every 30 seconds
+    () => {
+        if (deadletters.size !== 0) {
+            console.log(`...... checking dead letters, timestamp: ${new Date()}`);
+            for (let content of deadletters) {
+                interestKey = content.interestKey();
+                const undelivereds = irt.list(interestKey);
+                if (!undelivereds) {
+                    deadletters.delete(content);
+                    console.log(`--------- successfully re-delivered: ${interestKey}`);
+                    continue;
+                }
+                const nodes = Array.from(undelivereds);
+                console.log(`......... trying to deliver ${interestKey} to ${nodes}`);
+                nodes.forEach(async (node, index) => {
+                    resp = await contentDispatcher.sendContent(nodes, content);
+                    //console.log('--------', resp);
+                    if (resp[0].status === 200) {
+                        console.log(`-------- ${interestKey} delivered to ${node}`);
+                        irt.delist(interestKey, node);
+                    }
+                });
+            }
+        }
+    },
+    null,
+    true
+);

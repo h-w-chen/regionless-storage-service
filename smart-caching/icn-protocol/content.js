@@ -11,6 +11,10 @@ const Content = class {
         this.revEnd = revEnd;
         this.contentStatic = content;
     }
+
+    interestKey() {
+        return `${this.name}:${this.revStart}:${this.revEnd}`;
+    }
 };
 
 module.exports = Content;
