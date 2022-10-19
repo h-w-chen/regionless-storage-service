@@ -23,7 +23,7 @@ const rkvPromiseOfInterest = (interest) => {
             const nodes = Array.from(irt.list(interestKey));
             pit.delete(interestKey);
             resps = await contentDispatcher.sendContent(nodes, content);
-            console.log('delivered results:', resps);
+            // console.log('delivered results:', resps);
             resps.forEach((resp, index) => {
                 if (resp.status === 200) {
                     irt.delist(interestKey, nodes[index]);
@@ -47,27 +47,26 @@ const server = interestService.listen(10086, () => {
 const { CronJob } = require('cron');
 const deadletterDelivery = new CronJob(
     '*/30 * * * * *',   // every 30 seconds
-    () => {
+    async () => {
         if (deadletters.size !== 0) {
             console.log(`...... checking dead letters, timestamp: ${new Date()}`);
-            for (let content of deadletters) {
+            for (const content of deadletters) {
                 interestKey = content.interestKey();
                 const undelivereds = irt.list(interestKey);
-                if (!undelivereds) {
-                    deadletters.delete(content);
-                    console.log(`--------- successfully re-delivered: ${interestKey}`);
-                    continue;
-                }
                 const nodes = Array.from(undelivereds);
                 console.log(`......... trying to deliver ${interestKey} to ${nodes}`);
-                nodes.forEach(async (node, index) => {
+                for (const node of nodes) {
                     resp = await contentDispatcher.sendContent(nodes, content);
                     //console.log('--------', resp);
                     if (resp[0].status === 200) {
                         console.log(`-------- ${interestKey} delivered to ${node}`);
                         irt.delist(interestKey, node);
                     }
-                });
+                };
+                if (!irt.list(interestKey)) {
+                    deadletters.delete(content);
+                    console.log(`------ successfully re-delivered: ${interestKey}`);
+                }
             }
         }
     },
