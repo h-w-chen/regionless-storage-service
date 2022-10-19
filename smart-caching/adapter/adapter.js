@@ -7,6 +7,7 @@ const createInterestService = require('../icn-protocol/interestService');
 const pit = new Set();
 const IRT = require('../icn-protocol/irt');
 const irt = new IRT();
+const deadletters = new Set();
 
 const RKVAgent = require('./rkvAgent');
 rkvClient = new RKVAgent('http://127.0.0.1:8090/kv');
@@ -16,12 +17,22 @@ contentDispatcher = createContentDispatcher();
 
 const rkvPromiseOfInterest = (interest) => {
     return rkvClient.processInterest(interest)
-        .then((content) => {
+        .then(async (content) => {
             // console.log('content:', content);
-            const nodes = irt.list(interest.key());
-            pit.delete(interest.key());
-            irt.delete(interest.key());
-            return contentDispatcher.sendContent(nodes, content);
+            const interestKey = interest.key();
+            const nodes = Array.from(irt.list(interestKey));
+            pit.delete(interestKey);
+            resps = await contentDispatcher.sendContent(nodes, content);
+            console.log('delivered results:', resps);
+            resps.forEach((resp, index) => {
+                if (resp.status === 200) {
+                    irt.delist(interestKey, nodes[index]);
+                } else {
+                    console.log(`++++++ undelivered content to ${nodes[index]}`);
+                    deadletters.add(content);
+                    // todo: redeliver dead letters, if the future
+                }
+            });
         }).catch((e) => {
             console.error(`got runtime error while processing interest/content: ${e}`);
         });

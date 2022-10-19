@@ -11,9 +11,8 @@ const ContentDispatcher = class {
         const reqs = [];
         for(let node of nodes) {
             console.log(`<<<<<< content to ${node}: `, content);
-            reqs.push(this.client.post(
-                `http://${node}:10085/contents`,
-                content));
+            reqs.push(this.client.post(`http://${node}:10085/contents`, content)
+                        .catch((e) => {return {status: e.errno}; }));
         }
         return await Promise.all(reqs);
     }
