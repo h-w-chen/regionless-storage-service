@@ -1,13 +1,17 @@
 // leaf setting
 const config = require('config');
-timeout = config.get('leaf.timeout');
-console.log(`response timeout: \t ${timeout} ms`);
-maxCacheRecords = config.get('leaf.maxCacheRecords');
-console.log(`max records in cache: \t ${maxCacheRecords}`);
-const routes = config.get('ccn.route');
+timeout = config.leaf.timeout;
+maxCacheRecords = config.leaf.maxCacheRecords;
+const portContent = config.icn.ports.content
+const routes = config.ccn.route;
 const routeMaps = new Map();
-Object.keys(routes).forEach(r => routeMaps.set(r, config.get(`ccn.route.${r}`)));
-console.log('leaf routing table: \t', routeMaps);
+Object.keys(routes).forEach(r => routeMaps.set(r, config.ccn.route.get(r)));
+
+console.log(`response timeout:     \t ${timeout} ms`);
+console.log(`max records in cache: \t ${maxCacheRecords}`);
+console.log(`content port:         \t ${portContent}`);
+console.log('leaf routing table:   \t', routeMaps);
+console.log('');
 
 // prepare various components
 const {app, cache} = require('./app');
@@ -22,6 +26,6 @@ const server = app.listen(8090, () => {
     console.log("leaf is listening on port 8090 for rkv client requests.");
 });
 
-const icnServer = icnService.listen(10085, () => {
-    console.log("leaf is listening on port 10085 for internal ICN content packets.");
+const icnServer = icnService.listen(portContent, () => {
+    console.log(`leaf is listening on port ${portContent} for internal ICN content packets.`);
 });
