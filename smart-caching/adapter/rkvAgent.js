@@ -19,6 +19,7 @@ const convertToContent = (name, revStart, revEnd, records) => {
 
 const request = async (client, interest) => {
     const reqs = [];
+    // todo: to use rkv range query api, if available
     for (let i = interest.revStart; i <= interest.revEnd; i+=1) {
         reqs.push(
             client.get(`?key=${interest.name}&rev=${i}`)
