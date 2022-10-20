@@ -56,29 +56,7 @@ const server = interestService.listen(portInterest, () => {
 const { CronJob } = require('cron');
 const deadletterDelivery = new CronJob(
     config.cron.redeliveryTime,
-    async () => {
-        if (deadletters.size !== 0) {
-            console.log(`...... checking dead letters, timestamp: ${new Date()}`);
-            for (const content of deadletters) {
-                interestKey = content.interestKey();
-                const undelivereds = irt.list(interestKey);
-                const nodes = Array.from(undelivereds);
-                console.log(`......... trying to deliver ${interestKey} to ${nodes}`);
-                for (const node of nodes) {
-                    resp = await contentDispatcher.sendContent(nodes, content);
-                    //console.log('--------', resp);
-                    if (resp[0].status === 200) {
-                        console.log(`-------- ${interestKey} delivered to ${node}`);
-                        irt.delist(interestKey, node);
-                    }
-                };
-                if (!irt.list(interestKey)) {
-                    deadletters.delete(content);
-                    console.log(`------ successfully re-delivered: ${interestKey}`);
-                }
-            }
-        }
-    },
+    () => contentDispatcher.attemptOnDeadLetters(deadletters, irt),
     null,
     true
 );

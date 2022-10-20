@@ -74,4 +74,28 @@ describe('content dispatcher', () => {
             }, 1000*60*3);
         });
     });
+
+    describe('given a few dead letters', () => {
+        afterEach(() => {
+            jest.restoreAllMocks();
+        });
+
+        it('should attempt on them, and remove from dead box if delivered', async () => {
+            const deadletter = new Content('dead1', 1, 1, 'dummy1');
+            const deadletters = new Set([deadletter]);
+            const irt = {};
+            irt.__proto__.list = ()=>{};
+            irt.__proto__.delist = jest.fn();
+            jest.spyOn(irt, 'list')
+                .mockReturnValueOnce(new Set(['7.7.7.7']))
+                .mockReturnValueOnce(null);
+
+            const dispatcher = createContentDispatcher(11111);
+            jest.spyOn(dispatcher, 'sendContent').mockResolvedValueOnce([{status: 200}]);
+
+            await dispatcher.attemptOnDeadLetters(deadletters, irt);
+            expect(dispatcher.sendContent).toHaveBeenCalledWith(['7.7.7.7'], deadletter);
+            expect(deadletters.size).toBe(0);
+        });
+    });
 });
