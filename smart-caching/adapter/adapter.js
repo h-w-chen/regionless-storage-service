@@ -1,6 +1,15 @@
 // smart caching adapter
 
 // reading the setting
+const config = require('config');
+console.log(`rkv base url:        \t ${config.rkv.baseURL}`);
+console.log(`interest port:       \t ${config.icn.ports.interest}`);
+console.log(`content port:        \t ${config.icn.ports.content}`);
+console.log(`redelivery cron spec:\t ${config.cron.redeliveryTime}`);
+console.log('')
+
+const portInterest = config.icn.ports.interest
+const portContent = config.icn.ports.content
 
 // prepare various components
 const createInterestService = require('../icn-protocol/interestService');
@@ -10,10 +19,10 @@ const irt = new IRT();
 const deadletters = new Set();
 
 const RKVAgent = require('./rkvAgent');
-rkvClient = new RKVAgent('http://127.0.0.1:8090/kv');
+rkvClient = new RKVAgent(config.rkv.baseURL);
 
 const createContentDispatcher = require('../icn-protocol/contentDispatcher');
-contentDispatcher = createContentDispatcher();
+contentDispatcher = createContentDispatcher(portContent);
 
 const rkvPromiseOfInterest = (interest) => {
     return rkvClient.processInterest(interest)
@@ -40,13 +49,13 @@ const rkvPromiseOfInterest = (interest) => {
 const interestService = createInterestService(pit, irt, rkvPromiseOfInterest);
 
 // start interest message service
-const server = interestService.listen(10086, () => {
-    console.log("adapter is listening on port 10086 for internal Interest messages");
+const server = interestService.listen(portInterest, () => {
+    console.log(`adapter is listening on port ${portInterest} for internal Interest messages`);
 });
 
 const { CronJob } = require('cron');
 const deadletterDelivery = new CronJob(
-    '*/30 * * * * *',   // every 30 seconds
+    config.cron.redeliveryTime,
     async () => {
         if (deadletters.size !== 0) {
             console.log(`...... checking dead letters, timestamp: ${new Date()}`);

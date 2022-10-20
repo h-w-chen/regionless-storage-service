@@ -1,0 +1,11 @@
+# adapter settings
+[rkv]
+baseURL = "http://127.0.0.1:8090/kv"
+
+[icn.ports]
+interest = 10086
+content = 10085
+
+[cron]
+# see crontab for the field format; below is for every 30 seconds
+redeliveryTime = "*/30 * * * * *"

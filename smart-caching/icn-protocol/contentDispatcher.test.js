@@ -9,7 +9,7 @@ describe('content dispatcher', () => {
             jest.spyOn(axios, 'post')
                 .mockResolvedValueOnce({ status: 201, data: 'dummy1' })
                 .mockResolvedValueOnce({ status: 202, data: 'dummy2' });
-            this.contentDispatcher = createContentDispatcher();
+            this.contentDispatcher = createContentDispatcher(11111);
         });
 
         afterEach(() => {
@@ -27,8 +27,8 @@ describe('content dispatcher', () => {
                 ];
                 const resps = await this.contentDispatcher.sendContent(nodes, content);
                 expect(resps).toEqual(respExpected);
-                expect(axios.post).toHaveBeenCalledWith('http://1.1.1.1:10085/contents', content);
-                expect(axios.post).toHaveBeenCalledWith('http://2.2.2.2:10085/contents', content);
+                expect(axios.post).toHaveBeenCalledWith('http://1.1.1.1:11111/contents', content);
+                expect(axios.post).toHaveBeenCalledWith('http://2.2.2.2:11111/contents', content);
             });
         });
     });
