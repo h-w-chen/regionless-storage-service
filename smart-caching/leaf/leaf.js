@@ -18,7 +18,8 @@ const {app, cache} = require('./app');
 const Controller = require('../icn-protocol/controller');
 controller = new Controller(cache, routeMaps);
 
-const {contentService} = require('../icn-protocol/contentService');
+const createContentService = require('../icn-protocol/contentService');
+const contentService = createContentService();
 
 cache.setController(controller);
 

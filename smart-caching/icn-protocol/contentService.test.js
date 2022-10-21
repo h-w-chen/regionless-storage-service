@@ -1,7 +1,10 @@
 maxCacheRecords = 3;    // test setting
 
 const supertest = require('supertest');
-const {contentService} = require('./contentService');
+
+const createContentService = require('./contentService');
+const contentService = createContentService();
+
 const {cache} = require('../leaf/app');
 const Controller = require('./controller');
 controller = new Controller(cache, ['/'], new Map([['/', ['1.2.3.4']]]));
