@@ -18,7 +18,7 @@ const {app, cache} = require('./app');
 const Controller = require('../icn-protocol/controller');
 controller = new Controller(cache, routeMaps);
 
-const {icnService} = require('../icn-protocol/service');
+const {contentService} = require('../icn-protocol/contentService');
 
 cache.setController(controller);
 
@@ -26,6 +26,6 @@ const server = app.listen(8090, () => {
     console.log("leaf is listening on port 8090 for rkv client requests.");
 });
 
-const icnServer = icnService.listen(portContent, () => {
+const contentServer = contentService.listen(portContent, () => {
     console.log(`leaf is listening on port ${portContent} for internal ICN content packets.`);
 });

@@ -1,7 +1,7 @@
 maxCacheRecords = 3;    // test setting
 
 const supertest = require('supertest');
-const {icnService} = require('./service');
+const {contentService} = require('./contentService');
 const {cache} = require('../leaf/app');
 const Controller = require('./controller');
 controller = new Controller(cache, ['/'], new Map([['/', ['1.2.3.4']]]));
@@ -14,7 +14,7 @@ it('POST /contents should insert content in kv store', async () => {
 
     payload = {rev: 1, code: 201, value: 'val of k-1'};
     content = new Content('k', 1, 5, [payload]);
-    await supertest(icnService)
+    await supertest(contentService)
         .post('/contents')
         .set('Content-type', 'application/json')
         .send(JSON.stringify(content))

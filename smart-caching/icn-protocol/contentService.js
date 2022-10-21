@@ -3,21 +3,21 @@
 const Content = require('./content');
 
 const express = require('express');
-const icnService = express();
+const contentService = express();
 
 const bodyParser = require('body-parser');
-icnService.use(bodyParser.json());
-icnService.use(bodyParser.urlencoded({extended: true}));
+contentService.use(bodyParser.json());
+contentService.use(bodyParser.urlencoded({extended: true}));
 
 function toContentMessage(body) {
     return new Content(body.name, body.revStart, body.revEnd, body.contentStatic);
 }
 
-icnService.post('/contents', (req, resp) => {
+contentService.post('/contents', (req, resp) => {
     console.log(">>>>", req.body);
     const content = toContentMessage(req.body);
     controller.OnContent(content);
     resp.status(200).end('received');
 });
 
-module.exports = {icnService};
+module.exports = {contentService};
