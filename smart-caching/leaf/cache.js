@@ -50,7 +50,7 @@ const LocalCache = class {
         // request ICN controlelr with interest
         const sessionID = uuid.v4();
         const interestKey = `${key}:${rev}`;
-        const regId = this.controller.RequestInterest(interestKey, sessionID);
+        const regId = this.controller.requestInterest(interestKey, sessionID);
 
         const cacheTimeout = timeout || 3000;
         try{
@@ -58,7 +58,7 @@ const LocalCache = class {
             // now data should have been in the local store
             return this.getKeyOfRev(key, rev);
         } finally {
-            this.controller.RemoveInterest(interestKey, regId);
+            this.controller.removeInterest(interestKey, regId);
         }
     }
 };

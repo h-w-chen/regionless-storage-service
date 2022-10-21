@@ -17,7 +17,7 @@ describe('icn controller', () => {
         });
 
         it('Controller processes interest request', ()=>{
-            id = ctrlTest.RequestInterest('foo', '12345');
+            id = ctrlTest.requestInterest('foo', '12345');
             expect(id).toBe('12345');
             expect([...ctrlTest.irt.list('foo')]).toEqual([id]);
             // todo: ensure new IM sent out too
@@ -26,7 +26,7 @@ describe('icn controller', () => {
         it('Controller broadcasts interesting sessions', ()=>{
             const spy = jest.spyOn(cacheTest.emitter, 'emit');
             payload = {rev: 2, code: 234, value: 'val of wiz-2'};
-            ctrlTest.OnContent({name: 'wiz', revStart: 2, contentStatic: [payload]});
+            ctrlTest.onContent({name: 'wiz', revStart: 2, contentStatic: [payload]});
             expect(spy).toHaveBeenCalledTimes(3);
             expect(spy.mock.calls).toEqual([['a'], ['b'], ['c']]);
             expect(cacheTest.getKeyOfRev('wiz', 2)).toEqual({code: 234, value: 'val of wiz-2'});
@@ -34,7 +34,7 @@ describe('icn controller', () => {
 
         it('remove interest should delist session id from interest', () => {
             expect(ctrlTest.irt.list('torm:3:3')).toEqual(new Set(['foo', 'bar']));
-            ctrlTest.RemoveInterest('torm:3:3', 'foo');
+            ctrlTest.removeInterest('torm:3:3', 'foo');
             expect(ctrlTest.irt.list('torm:3:3')).toEqual(new Set(['bar']));
         });
     });

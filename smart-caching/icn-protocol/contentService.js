@@ -17,7 +17,7 @@ const createContentService = () => {
     contentService.post('/contents', (req, resp) => {
         console.log(">>>>", req.body);
         const content = toContentMessage(req.body);
-        controller.OnContent(content);
+        controller.onContent(content);
         resp.status(200).end('received');
     });
 

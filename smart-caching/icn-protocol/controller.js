@@ -12,7 +12,7 @@ const Controller = class {
         this.cache = cache;
     }
 
-    RequestInterest(interest, sessionID) {
+    requestInterest(interest, sessionID) {
         this.irt.enlist(interest, sessionID);
         if (!this.pit.has(interest)){
             this.pit.add(interest);
@@ -20,11 +20,11 @@ const Controller = class {
         return sessionID;
     }
 
-    RemoveInterest(interest, sessionID) {
+    removeInterest(interest, sessionID) {
         this.irt.delist(interest, sessionID);
     }
 
-    OnContent(content) {
+    onContent(content) {
         content.contentStatic.forEach((c) => {
             this.cache.setKeyOfRev(content.name,
                 c.rev,

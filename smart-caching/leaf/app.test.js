@@ -12,8 +12,8 @@ describe('leaf app http server', () => {
             cache.setKeyOfRev('k', 77, {code: 404});
 
             const ctrlFake = {
-                RequestInterest: jest.fn(),
-                RemoveInterest: jest.fn(),
+                requestInterest: jest.fn(),
+                removeInterest: jest.fn(),
             };
             cache.setController(ctrlFake);
         });

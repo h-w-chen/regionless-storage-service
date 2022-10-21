@@ -9,8 +9,8 @@ describe('cache api', () => {
         cacheTest.setKeyOfRev('a', 1, { code: 200, value: "a-1 val" });
 
         const ctrlFake = {
-            RequestInterest: jest.fn().mockReturnValue('dummy-id'),
-            RemoveInterest: jest.fn(),
+            requestInterest: jest.fn().mockReturnValue('dummy-id'),
+            removeInterest: jest.fn(),
         };
         cacheTest.setController(ctrlFake);
     });
