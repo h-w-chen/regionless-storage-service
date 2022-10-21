@@ -31,7 +31,7 @@ const Controller = class {
                 {code: c.code, value: c.value});
         });
 
-        const interestKey = `${content.name}:${content.revStart}`;
+        const interestKey = content.interestKey();
         const sessions = this.irt.list(interestKey);
         this.pit.delete(interestKey);
         if (!sessions) return;

@@ -49,7 +49,7 @@ const LocalCache = class {
     
         // request ICN controlelr with interest
         const sessionID = uuid.v4();
-        const interestKey = `${key}:${rev}`;
+        const interestKey = `${key}:${rev}:${rev}`;
         const regId = this.controller.requestInterest(interestKey, sessionID);
 
         const cacheTimeout = timeout || 3000;
