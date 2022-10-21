@@ -6,8 +6,8 @@ const createContentService = require('./contentService');
 const contentService = createContentService();
 
 const {cache} = require('../leaf/app');
-const Controller = require('./controller');
-controller = new Controller(cache, new Map([['/', ['1.2.3.4']]]));
+const createController = require('./controller');
+controller = createController(cache, new Map([['/', ['1.2.3.4']]]));
 
 const Content = require('./content');
 

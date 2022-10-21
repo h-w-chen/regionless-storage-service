@@ -46,4 +46,4 @@ function createController (cache, routeMaps) {
     return new Controller(cache, routeMaps);
 }
 
-module.exports = Controller;
+module.exports = createController;
