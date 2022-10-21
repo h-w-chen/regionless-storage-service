@@ -27,11 +27,13 @@ contentDispatcher = createContentDispatcher(portContent);
 const rkvPromiseOfInterest = (interest) => {
     return rkvClient.processInterest(interest)
         .then(async (content) => {
+            // keep comment line below for troubleshooting turning-on
             // console.log('content:', content);
             const interestKey = interest.key();
             const nodes = Array.from(irt.list(interestKey));
             pit.delete(interestKey);
             resps = await contentDispatcher.sendContent(nodes, content);
+            // keep comment line below for troubleshooting turning-on
             // console.log('delivered results:', resps);
             resps.forEach((resp, index) => {
                 if (resp.status === 200) {
@@ -39,7 +41,6 @@ const rkvPromiseOfInterest = (interest) => {
                 } else {
                     console.log(`++++++ undelivered content to ${nodes[index]}`);
                     deadletters.add(content);
-                    // todo: redeliver dead letters, in the future
                 }
             });
         }).catch((e) => {

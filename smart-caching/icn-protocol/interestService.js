@@ -3,7 +3,7 @@ const bodyParser = require('body-parser');
 const Interest = require('./interest');
 
 
-const createInterestService = (pit, irt, genInterestPromise) => {
+const createInterestService = (pit, irt, onInterestPromise) => {
     const app = express();
     app.use(bodyParser.json());
     app.use(bodyParser.urlencoded({extended: true}));
@@ -16,7 +16,7 @@ const createInterestService = (pit, irt, genInterestPromise) => {
         interestKey = interest.key();
         if (!pit.has(interestKey)){
             pit.add(interestKey);
-            genInterestPromise(interest);
+            onInterestPromise(interest);
         }
         irt.enlist(interest.key(), fromIP);
         resp.status(200).end('interest received');
