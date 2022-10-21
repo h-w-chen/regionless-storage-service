@@ -1,7 +1,7 @@
-const Controller = require('./controller');
+const createController = require('./controller');
 const Cache = require('../leaf/cache');
 const cacheTest = new Cache();
-const ctrlTest = new Controller(
+const ctrlTest = createController(
     cacheTest,
     new Map([['/', ['127.0.0.1:10101']]]));
 
