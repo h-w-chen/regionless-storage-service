@@ -15,7 +15,7 @@ console.log('');
 
 // prepare various components
 const {app, cache} = require('./app');
-const createController = require('../icn-protocol/controller');
+const createController = require('./controller');
 controller = createController(cache, routeMaps);
 
 const createContentService = require('../icn-protocol/contentService');

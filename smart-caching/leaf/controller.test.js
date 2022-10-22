@@ -1,11 +1,11 @@
 const createController = require('./controller');
-const Cache = require('../leaf/cache');
+const Cache = require('./cache');
 const cacheTest = new Cache();
 const ctrlTest = createController(
     cacheTest,
     new Map([['/', ['127.0.0.1:10101']]]));
 
-const Content = require('./content');
+const Content = require('../icn-protocol/content');
 
 jest.mock("axios");
 const mockAxios = require("axios");

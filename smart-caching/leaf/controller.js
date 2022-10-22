@@ -2,8 +2,8 @@
 // 1- on request, send Interest message if not yet;
 // 2- on receipt of content, update cache and notify all pending requests.
 
-const IRT = require('./irt');
-const PIT = require('./pit');
+const IRT = require('../icn-protocol/irt');
+const PIT = require('../icn-protocol/pit');
 
 const Controller = class {
     constructor (cache, routeMaps) {
