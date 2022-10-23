@@ -12,32 +12,31 @@ const mockAxios = require("axios");
 mockAxios.post.mockImplementation((node) => Promise.resolve(node));
 
 describe('icn controller', () => {
-    describe('given pre-populated irt', () => {
+    describe('given pre-populated pit', () => {
         beforeAll(() => {
-            ctrlTest.irt.interests.set('wiz:2:2', new Set('abc'));
-            ctrlTest.irt.interests.set('torm:3:3', new Set(['foo', 'bar']));
+            jest.restoreAllMocks();
+            ctrlTest.pit.add('wiz:2:2');
+            ctrlTest.pit.add('torm:3:3');
         });
 
-        it('Controller processes interest request', ()=>{
-            id = ctrlTest.requestInterest('foo', '12345');
-            expect(id).toBe('12345');
-            expect([...ctrlTest.irt.list('foo')]).toEqual([id]);
-            // todo: ensure new IM sent out too
+        it('should insert interest in pit', ()=>{
+            ctrlTest.requestInterest('foo');
+            expect(ctrlTest.pit.has('foo')).toBeTruthy();
         });
 
-        it('Controller broadcasts interesting sessions', ()=>{
+        it('should emit interesting event', ()=>{
             const spy = jest.spyOn(cacheTest.emitter, 'emit');
             payload = {rev: 2, code: 234, value: 'val of wiz-2'};
             ctrlTest.onContent(new Content('wiz', 2, 2, [payload]));
-            expect(spy).toHaveBeenCalledTimes(3);
-            expect(spy.mock.calls).toEqual([['a'], ['b'], ['c']]);
+            expect(spy).toHaveBeenCalledTimes(1);
+            expect(spy.mock.calls).toEqual([['wiz:2:2']]);
             expect(cacheTest.getKeyOfRev('wiz', 2)).toEqual({code: 234, value: 'val of wiz-2'});
         });
 
-        it('remove interest should delist session id from interest', () => {
-            expect(ctrlTest.irt.list('torm:3:3')).toEqual(new Set(['foo', 'bar']));
-            ctrlTest.removeInterest('torm:3:3', 'foo');
-            expect(ctrlTest.irt.list('torm:3:3')).toEqual(new Set(['bar']));
+        it('should remove interest from pit', () => {
+            expect(ctrlTest.pit.has('torm:3:3')).toBeTruthy();
+            ctrlTest.removeInterest('torm:3:3');
+            expect(ctrlTest.pit.has('torm:3:3')).toBeFalsy();
         });
     });
 });

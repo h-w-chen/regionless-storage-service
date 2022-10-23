@@ -9,7 +9,7 @@ describe('cache api', () => {
         cacheTest.setKeyOfRev('a', 1, { code: 200, value: "a-1 val" });
 
         const ctrlFake = {
-            requestInterest: jest.fn().mockReturnValue('dummy-id'),
+            requestInterest: jest.fn(),
             removeInterest: jest.fn(),
         };
         cacheTest.setController(ctrlFake);
@@ -35,7 +35,7 @@ describe('cache api', () => {
         originalGetKeyOfRev = cacheTest.getKeyOfRev; // will be restored right after
         cacheTest.getKeyOfRev = mock;
         setTimeout(() => {
-            cacheTest.emitter.emit('dummy-id');
+            cacheTest.emitter.emit('c:3:3');
         }, 1000);
         let v = await cacheTest.fetchKeyOfRev('c', 3);
         expect(v).toBe('dummy kvstore returned');

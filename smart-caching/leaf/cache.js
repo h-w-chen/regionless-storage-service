@@ -1,6 +1,5 @@
 const { EventEmitter, once } = require("events");
-const LRU = require('lru-cache')
-const uuid = require("uuid");
+const LRU = require('lru-cache');
 
 const withTimeout = async (millis, promise) => {
     let timer = null;
@@ -48,17 +47,16 @@ const LocalCache = class {
         }
     
         // request ICN controlelr with interest
-        const sessionID = uuid.v4();
         const interestKey = `${key}:${rev}:${rev}`;
-        const regId = this.controller.requestInterest(interestKey, sessionID);
+        this.controller.requestInterest(interestKey);
 
         const cacheTimeout = timeout || 3000;
         try{
-            await withTimeout(cacheTimeout, once(this.emitter, regId).then(() => 'lazy populated'));
+            await withTimeout(cacheTimeout, once(this.emitter, interestKey).then(() => 'lazy populated'));
             // now data should have been in the local store
             return this.getKeyOfRev(key, rev);
         } finally {
-            this.controller.removeInterest(interestKey, regId);
+            this.controller.removeInterest(interestKey);
         }
     }
 };

@@ -2,26 +2,22 @@
 // 1- on request, send Interest message if not yet;
 // 2- on receipt of content, update cache and notify all pending requests.
 
-const IRT = require('../icn-protocol/irt');
 const PIT = require('../icn-protocol/pit');
 
 const Controller = class {
     constructor (cache, routeMaps) {
-        this.irt = new IRT();
         this.pit = new PIT(routeMaps);
         this.cache = cache;
     }
 
-    requestInterest(interest, sessionID) {
-        this.irt.enlist(interest, sessionID);
+    requestInterest(interest) {
         if (!this.pit.has(interest)){
             this.pit.add(interest);
         }
-        return sessionID;
     }
 
-    removeInterest(interest, sessionID) {
-        this.irt.delist(interest, sessionID);
+    removeInterest(interest) {
+        this.pit.delete(interest);
     }
 
     onContent(content) {
@@ -32,12 +28,8 @@ const Controller = class {
         });
 
         const interestKey = content.interestKey();
-        const sessions = this.irt.list(interestKey);
-        this.pit.delete(interestKey);
-        if (!sessions) return;
-        for (let sess of sessions) {
-            console.log(`to notify ${sess}`);
-            this.cache.emitter.emit(sess);
+        if (this.pit.has(interestKey)) {
+            this.cache.emitter.emit(interestKey);
         }
     }
 };
